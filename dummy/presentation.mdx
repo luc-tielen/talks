@@ -17,10 +17,14 @@ Important stuff goes here.
 
 ---
 
-## A slide with code
+export { components } from "mdx-deck-code-surfer"
 
-```javascript
+```javascript Composing functions
 const id = (x) => x;
 const compose = (f, g) => f(g(x));
 const composeMany = (fs) => fs.reduce(compose, id);
+----
+1 > Identity function
+2 > Composing functions
+3 > Composing list of functions
 ```
