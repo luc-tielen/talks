@@ -1,4 +1,15 @@
 
+import { dark } from "mdx-deck/themes"
+import nightOwl from "prism-react-renderer/themes/nightOwl"
+
+export const theme = {
+  ...dark,
+  codeSurfer: {
+    ...nightOwl,
+    showNumbers: false
+  }
+}
+
 # A dummy example presentation
 
 ---
@@ -21,10 +32,14 @@ export { components } from "mdx-deck-code-surfer"
 
 ```javascript Composing functions
 const id = (x) => x;
-const compose = (f, g) => f(g(x));
+const compose = (f, g) => x => f(g(x));
 const composeMany = (fs) => fs.reduce(compose, id);
+
+// Result = 11
+const result = composeMany([x => x + 2, x => x * 3])(3)
 ----
 1 > Identity function
 2 > Composing functions
 3 > Composing list of functions
+5, 6 > Using it!
 ```
