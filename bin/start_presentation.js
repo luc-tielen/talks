@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const { execSync } = require("child_process");
+const { existsSync } = require("fs");
 const tcpPortUsed = require("tcp-port-used");
 
 const HOST = "127.0.0.1";
@@ -21,7 +22,15 @@ const main = async () => {
     process.exit(1);
   }
 
-  execSync(`yarn mdx-deck ${folderName}/presentation.mdx`, {
+  const presentationFile = `${folderName}/presentation.mdx`;
+  if (!existsSync(presentationFile)) {
+    process.stderr.write(
+      `File "${presentationFile}" does not exist, aborting.\n`
+    );
+    process.exit(1);
+  }
+
+  execSync(`yarn mdx-deck ${presentationFile}`, {
     stdio: "inherit"
   });
   process.exit(0);
