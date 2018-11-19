@@ -5,5 +5,8 @@
   "main": "index.js",
   "repository": "https://github.com/luc-tielen/talks",
   "author": "Luc Tielen <luc.tielen@kabisa.nl>",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "mdx-deck": "^1.7.14"
+  }
 }
