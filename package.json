@@ -1,0 +1,9 @@
+{
+  "name": "talks",
+  "version": "1.0.0",
+  "description": "Presentation slides",
+  "main": "index.js",
+  "repository": "https://github.com/luc-tielen/talks",
+  "author": "Luc Tielen <luc.tielen@kabisa.nl>",
+  "license": "MIT"
+}
