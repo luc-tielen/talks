@@ -3,11 +3,7 @@ import { withDeck } from "mdx-deck/dist/context";
 import { setSteps } from "mdx-deck/dist/updaters";
 import Markdown from "react-markdown";
 
-export class Step extends React.Component {
-  render() {
-    return <Markdown source={this.props.children} />;
-  }
-}
+export const Step = Markdown;
 
 export const Steps = withDeck(
   class StepsComponent extends React.Component {
@@ -19,7 +15,15 @@ export const Steps = withDeck(
     }
 
     render() {
-      return this.props.children[this.props.deck.step];
+      const { children, deck } = this.props;
+      if (deck.step === undefined) {
+        // in presenter mode
+        return children;
+      }
+
+      // Defensive code because all components are mounted at
+      // beginning of presentation, step can go beyond array length
+      return children[deck.step] || null;
     }
   }
 );
