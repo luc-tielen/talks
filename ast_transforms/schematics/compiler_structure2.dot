@@ -1,0 +1,12 @@
+digraph {
+  "Intermediate code gen" [style=filled color="lightblue"];
+  Optimizer [style=filled color="lightblue"];
+
+  Start -> Lexer [label="Text (Code)"];
+  Lexer -> Parser [label="Token stream"];
+  Parser -> "Semantic Analysis" [label="AST"];
+  "Semantic Analysis" -> "Intermediate code gen" [label="AST"];
+  "Intermediate code gen" -> Optimizer [label="IR"];
+  Optimizer -> "Code gen" [label="Optimized IR"];
+  "Code gen" -> End [label="Target code"]
+}

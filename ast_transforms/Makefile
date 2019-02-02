@@ -1,6 +1,10 @@
 
 schematics:
-	find schematics -type f | xargs plantuml
-	mv schematics/*.png images/
+	find schematics -type f | grep .dot | \
+		xargs basename -s .dot | \
+		xargs -I {} -n2 dot -Tsvg schematics/{}.dot -o images/{}.svg
 
-.PHONY: schematics
+optimize_images:
+	svgo images/
+
+.PHONY: schematics optimize_images
