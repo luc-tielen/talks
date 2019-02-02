@@ -1,6 +1,7 @@
 
 import { Steps, Step } from "../components/Steps"
 import { dark } from "mdx-deck/themes"
+import { Notes } from "mdx-deck"
 import nightOwl from "prism-react-renderer/themes/nightOwl"
 
 export { components } from "mdx-deck-code-surfer"
@@ -28,16 +29,19 @@ export const theme = {
 ## Structure of a compiler
 
 <Steps>
-<Step>![Compiler structure](./images/compiler_structure.png)</Step>
-<Step>![Compiler structure](./images/compiler_structure2.png)</Step>
+<Step>![Compiler structure](./images/compiler_structure.svg)</Step>
+<Step>![Compiler structure](./images/compiler_structure2.svg)</Step>
 </Steps>
 
 ---
 
-## Intro: Abstract Syntax Trees
+## Abstract Syntax Trees
 
-- show simple calculation as an example
-- emphasize that this is now the level at which we will be focusing
+![Simple AST](./images/simple_ast.svg)
+
+<Notes>
+This is now the level at which we will be focusing for the rest of the talk.
+</Notes>
 
 ---
 
@@ -91,8 +95,8 @@ TODO: multiple slides, show concrete examples like constant folding, dead code e
 - macros are evil, dont use macros => embrace it
 - it is possible to focus on a tiny extensible core language, build abstractions on top of that
 
-```notes
-
+<Notes>
+<p>
 Show the following:
 - "abc"
 - 123
@@ -100,12 +104,12 @@ Show the following:
 - eval vs quote
 - quasiquote & unquote
 - define-syntax-rule
-
 - unless as a macro
 - loop as a macro
-- ...
 - DSL?
-```
+</p>
+</Notes>
+
 
 ---
 
