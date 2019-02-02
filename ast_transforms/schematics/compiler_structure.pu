@@ -1,0 +1,19 @@
+
+@startuml
+
+:Code (Text);
+-> Lexer;
+:Token Stream;
+-> Parser;
+:AST;
+-> Semantic analysis;
+:AST;
+-[#blue]-> Intermediate code generator;
+:IR;
+-> Optimizer;
+:Optimized IR;
+-> Code generator;
+:Target code;
+
+@enduml
+
