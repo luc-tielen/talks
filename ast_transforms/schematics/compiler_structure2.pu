@@ -8,7 +8,7 @@
 :AST;
 -> Semantic analysis;
 :AST;
--> Intermediate code generator;
+-[#blue]-> Intermediate code generator;
 :IR;
 -> Optimizer;
 :Optimized IR;

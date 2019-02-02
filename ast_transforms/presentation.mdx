@@ -1,4 +1,5 @@
 
+import { Steps, Step } from "../components/Steps"
 import { dark } from "mdx-deck/themes"
 import nightOwl from "prism-react-renderer/themes/nightOwl"
 
@@ -24,10 +25,12 @@ export const theme = {
 
 ---
 
-## Intro: structure of a compiler
+## Structure of a compiler
 
-- show the steps of the compiler (schematic)
-- mark the part where we will be focusing on now
+<Steps>
+<Step>![Compiler structure](./images/compiler_structure.png)</Step>
+<Step>![Compiler structure](./images/compiler_structure2.png)</Step>
+</Steps>
 
 ---
 
@@ -88,6 +91,8 @@ TODO: multiple slides, show concrete examples like constant folding, dead code e
 - macros are evil, dont use macros => embrace it
 - it is possible to focus on a tiny extensible core language, build abstractions on top of that
 
+```notes
+
 Show the following:
 - "abc"
 - 123
@@ -100,10 +105,7 @@ Show the following:
 - loop as a macro
 - ...
 - DSL?
-
----
-
-- XKCD comic at end
+```
 
 ---
 
@@ -118,6 +120,8 @@ Show the following:
 ---
 
 ## Questions?
+
+![Lisp XKCD](./images/lisp.png)
 
 ---
 
