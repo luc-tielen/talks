@@ -9,6 +9,9 @@
   "dependencies": {
     "mdx-deck": "^1.7.14",
     "mdx-deck-code-surfer": "^0.5.3",
+    "react": "^16.0.0",
+    "styled-components": "^3.0.0",
+    "prop-types": "^15.0.0",
     "react-markdown": "^4.0.6",
     "tcp-port-used": "^1.0.1"
   },
