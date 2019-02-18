@@ -200,6 +200,7 @@ Focus on: optimizing
   1
   (display "hello world"))
 
+; example usage: (for (1 2 3) displayln)
 (define-syntax for
   (syntax-rules ()
     [(for (x) func) (func x)]
@@ -223,32 +224,14 @@ Focus on: optimizing
 '(begin (displayln 1)
         (begin (displayln 2)
                (displayln 3)))
-
-(define-syntax quoted-cond
-  (syntax-rules ()
-    [(quoted-cond [test value])
-     `(if test value (void))]
-    [(quoted-cond [test value] [test2 value2] ...)
-     `(if test value ,(quoted-cond [test2 value2] ...))]))
-
-> (quoted-cond
-    [(> 1 x) 1]
-    [(> 3 1) 2])
-'(if (> 1 x)
-   1
-   (if (> 3 1)
-     2
-     (void)))
 ----
 1:3 > If expressions
 5:7 > Define-syntax-rule
 9:12 > Our own syntax!
-14:19 > Loop example
-21:24 > In REPL
-26:31 > Variant with quotation
-33:36> In REPL
-38:43 > Multi if example (cond)
-45:52 > In REPL
+14:20 > Loop example
+22:25 > In REPL
+27:32 > Variant with quotation
+34:37> In REPL
 ```
 
 <Notes>
