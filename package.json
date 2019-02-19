@@ -15,7 +15,11 @@
     "react-markdown": "^4.0.6",
     "tcp-port-used": "^1.0.1"
   },
+  "resolutions": {
+    "prism-react-renderer": "luc-tielen/prism-react-renderer#master"
+  },
   "scripts": {
+    "postinstall": "cd node_modules/prism-react-renderer && yarn && yarn build",
     "present": "./bin/start_presentation.js"
   }
 }
