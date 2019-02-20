@@ -1,4 +1,8 @@
 graph {
+  bgcolor=transparent;
+  node[color=white style="filled,solid"];
+  edge[color=white fontcolor=white];
+
   "+" -- a;
   "+" -- 6;
 }

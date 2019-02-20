@@ -1,5 +1,9 @@
 digraph {
   rankdir = "LR";
+  bgcolor=transparent;
+  node[color=white style="filled,solid"];
+  edge[color=white fontcolor=white];
+
   Start -> Lexer [label="Text\n(Code)"];
   Lexer -> Parser [label="Token\nstream"];
   Parser -> "Semantic\nAnalysis" [label="AST"];

@@ -1,4 +1,6 @@
 graph {
-  node [width=1.5 height=1]
+  bgcolor=transparent;
+  node [width=1.5 height=1 color=white style="filled,solid"]
+  edge[color=white fontcolor=white];
   optimizer;
 }

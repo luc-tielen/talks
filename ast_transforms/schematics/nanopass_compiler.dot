@@ -1,5 +1,9 @@
 graph {
   rankdir = "LR";
+  bgcolor=transparent;
+  node[color=white style="filled,solid"];
+  edge[color=white fontcolor=white];
+
   pass1 -- pass2;
   pass2 -- pass3;
   pass3 -- pass4;
