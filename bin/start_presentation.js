@@ -30,7 +30,7 @@ const main = async () => {
     process.exit(1);
   }
 
-  execSync(`yarn mdx-deck ${presentationFile}`, {
+  execSync(`yarn mdx-deck --webpack ./webpack.config.js ${presentationFile}`, {
     stdio: "inherit"
   });
   process.exit(0);

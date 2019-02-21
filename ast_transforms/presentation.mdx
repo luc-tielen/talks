@@ -2,16 +2,19 @@
 import { Steps, Step } from "../components/Steps"
 import Split from "../layouts/Split"
 import Markdown from "react-markdown"
-import { dark } from "mdx-deck/themes"
 import { Notes } from "mdx-deck"
+import { components } from "mdx-deck-code-surfer"
+import { default as kabisaTheme } from "../mdx-kabisa-theme"
 import nightOwl from "prism-react-renderer/themes/nightOwl"
 
-export { components } from "mdx-deck-code-surfer"
 export const theme = {
-  ...dark,
+  ...kabisaTheme,
+  components: {
+    ...kabisaTheme.components,
+    ...components
+  },
   codeSurfer: {
-    ...nightOwl,
-    showNumbers: false
+    ...nightOwl
   }
 }
 
@@ -61,8 +64,10 @@ This is now the level at which we will be focusing for the rest of the talk.
 </Split>
 
 <Notes>
-- Possible to add / modify / simplify information
-- Can optimizing programs using this way
+<ul>
+  <li>Possible to add / modify / simplify information</li>
+  <li>Can optimize programs using this way</li>
+</ul>
 </Notes>
 
 ---
@@ -105,7 +110,7 @@ Focus on: optimizing
 
 - Constant folding
 - Dead code elimination
-- Curried lambdas / applications
+- Loop unrolling
 - ...
 
 ---
@@ -121,19 +126,23 @@ Focus on: optimizing
 ## Desugaring expressions (2)
 
 - Examples: Racket
-- Code = data, data = code
 - Macros: rewrite code on AST level
 - Full power of language during compile time
 
 <Notes>
-- Lisp mantra: code = data, data = code
-- Also called: the programmable programming language
-- Full power includes:
-  - macros expanding to macros
-  - compile time evaluation
-  - HTTP requests
-  - ...
-- Elixir: also some features possible, but more syntax to explain
+<ul>
+  <li>Lisp mantra: code = data, data = code</li>
+  <li>Also called: the programmable programming language</li>
+  <li>Full power includes:</li>
+  <ul>
+    <li>macros expanding to macros</li>
+    <li>compile time evaluation</li>
+    <li>HTTP requests</li>
+    <li>...</li>
+  </ul>
+  <li>Elixir: also some features possible, but more syntax to explain</li>
+</ul>
+
 </Notes>
 
 ---
@@ -177,11 +186,11 @@ Focus on: optimizing
 ```
 
 <Notes>
-<p>
-- AST looks the same as the code
-- Simple structure => extensible syntax
-- Special forms: define, lambda, ...
-</p>
+<ul>
+  <li>AST looks the same as the code</li>
+  <li>Simple structure => extensible syntax</li>
+  <li>Special forms: define, lambda, ...</li>
+</ul>
 </Notes>
 
 ---
@@ -235,15 +244,15 @@ Focus on: optimizing
 ```
 
 <Notes>
-<p>
-- define-syntax-rule: add custom syntax
-- Evaluated at compile time
-- Hygienic macros
-- multiple rules: slightly more complex
-- Many different variations, since syntax-based macros are defined in term of one another
-- also possible: cond, assert, ...
-- quoted-X versions for easily showing expanded AST
-</p>
+<ul>
+  <li>define-syntax-rule: add custom syntax</li>
+  <li>Evaluated at compile time</li>
+  <li>Hygienic macros</li>
+  <li>multiple rules: slightly more complex</li>
+  <li>Many different variations, since syntax-based macros are defined in term of one another</li>
+  <li>also possible: cond, assert, ...</li>
+  <li>quoted-X versions for easily showing expanded AST</li>
+</ul>
 </Notes>
 
 ---
