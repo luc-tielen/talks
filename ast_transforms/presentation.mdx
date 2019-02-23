@@ -4,19 +4,22 @@ import Split from "../layouts/Split"
 import Markdown from "react-markdown"
 import { Notes } from "mdx-deck"
 import { components } from "mdx-deck-code-surfer"
-import { default as kabisaTheme } from "../mdx-kabisa-theme"
+import { default as kabisaTheme } from "mdx-deck-kabisa-theme"
+import Provider from "mdx-deck/dist/Provider";
 import nightOwl from "prism-react-renderer/themes/nightOwl"
 
+export const themeInfo = kabisaTheme(Provider);
 export const theme = {
-  ...kabisaTheme,
+  ...themeInfo,
   components: {
-    ...kabisaTheme.components,
+    ...themeInfo.components,
     ...components
   },
   codeSurfer: {
     ...nightOwl
   }
 }
+
 
 # AST transformations
 
