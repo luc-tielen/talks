@@ -10,7 +10,7 @@
     "mdx-deck": "^1.10.0",
     "mdx-deck-code-surfer": "^0.5.3",
     "mdx-deck-kabisa-theme":
-      "luc-tielen/mdx-deck-kabisa-theme#befbcc4717e7bae1cfe778f27931cada444ff976",
+      "luc-tielen/mdx-deck-kabisa-theme#71a95f6ec2912f5fa824caf83b4e7276df1f306c",
     "react": "^16.0.0",
     "styled-components": "^3.0.0",
     "prop-types": "^15.0.0",
