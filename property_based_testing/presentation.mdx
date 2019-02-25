@@ -1,0 +1,212 @@
+
+import { Steps, Step } from "../components/Steps"
+import Split from "../layouts/Split"
+import Markdown from "react-markdown"
+import { Notes } from "mdx-deck"
+import { components } from "mdx-deck-code-surfer"
+import { default as kabisaTheme } from "mdx-deck-kabisa-theme"
+import nightOwl from "prism-react-renderer/themes/nightOwl"
+
+export const theme = {
+  ...kabisaTheme,
+  components: {
+    ...kabisaTheme.components,
+    ...components
+  },
+  codeSurfer: {
+    ...nightOwl
+  }
+}
+
+# Property based testing
+
+---
+
+## Who am I
+
+- TODO
+- name
+- twitter
+- picture
+- marketing slide
+
+---
+
+## Table of contents
+
+- A quick recap: unit tests
+- Property based testing
+  - key concepts
+  - examples
+- Questions
+
+---
+
+## A quick recap: unit tests
+
+- Great for checking expected behavior
+- But: think out examples manually
+
+---
+
+```javascript
+describe("my first unit test", () => {
+  it("verifies expected behavior", () => {
+    expect(1 + 1).to.eql(2);
+  });
+})
+----
+* > Simple unit test
+1 > describe
+2 > it
+3 > expect
+```
+
+- TODO picture of test output + how to run in mocha
+
+---
+
+## Property based testing
+
+![QuickCheck paper](./images/quickcheck_paper.png)
+
+- Describe behavior of code in terms of "properties"
+- Origin: Haskell (QuickCheck)
+- Not: exhaustive checking &#x2192; formal verification
+
+---
+
+## Property based testing
+
+- Javascript: [JSverify](https://github.com/jsverify/jsverify) (and others..)
+- Side by side with unit tests
+- TODO example in JS using verify (commutative addition)
+
+---
+
+## High level view
+
+![System under test](./images/high_level_view_sut.png)
+
+- System under test: "SUT"
+- Data in, data out
+
+<Notes>
+Important, no side effects!
+</Notes>
+
+---
+
+## High level view (2)
+
+![Unit test](./images/high_level_view_unit_test.png)
+
+- Single iteration
+- Manual created inputs
+- Assertions on output
+
+---
+
+## High level view (3)
+
+![Property test](./images/high_level_view_property_test.png)
+
+- Many iterations
+- Random data
+- Assertions: relations between in- and outputs!
+
+---
+
+## Generators
+
+- "Directed" randomness: e.g. -1, 0, 1, NaN, weird unicode chars, undefined, ...
+- Functions &#x2192; composable
+- Library uses generators to automatically create input data
+
+---
+
+## Generators
+
+- TODO example, check if examples can be made in REPL
+
+---
+
+## Shrinking
+
+![Shrinking](./images/shrinking_example.png)
+
+- Failing property: contains random, possibly complex data
+- Useful if it would find simpler case
+
+---
+
+## Shrinking (2)
+
+![Shrinking algorithm](./images/shrinking_algorithm.png)
+
+- Repeatedly try with simpler data until test doesn't fail
+- &#x2192; previous test is 'minimal' example
+- Example: generated a = 125, a < 100
+
+---
+
+## Business logic example
+
+- TODO bank example
+
+---
+
+## "Parallel map" example
+
+- TODO find good counterpart for javascript
+
+---
+
+## Good candidates for PBT
+
+- Business logic (domain layer)
+- Pure code in general
+- Note: executed many times &#x2192; has to be fast!
+
+---
+
+## Common patterns in PBT
+
+- Commutativity: a + b = b + a
+- Associativity: a + (b + c) = (a + b) + c
+- Idempotency: f(f(x)) = f(x)
+- Encode + decode = no-op
+- Checking against simplified model
+- Checking domain invariants (business rules)
+- ...
+
+---
+
+## Testing stateful systems
+
+- Properties so far: no external state across function calls
+- TODO check if possible with JSverify
+- Out of scope for today
+
+---
+
+## Conclusion
+
+- PBT is a powerful tool in a developers arsenal
+- More initial thinking
+- Big payoff
+- But: not everything is a nail!
+
+---
+
+## Reading material
+
+- [https://github.com/jsverify/jsverify](https://github.com/jsverify/jsverify)
+- [https://en.wikipedia.org/wiki/QuickCheck](https://en.wikipedia.org/wiki/QuickCheck)
+- [https://kabisa.nl](https://kabisa.nl)
+- [https://theguild.nl](https://theguild.nl)
+
+---
+
+## Questions?
+
