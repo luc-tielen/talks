@@ -24,11 +24,8 @@ export const theme = {
 
 ## Who am I
 
-- TODO
-- name
-- twitter
-- picture
-- marketing slide
+![](./images/luc_slack_foto.jpeg)
+<h5>Luc Tielen (<strong>@luc-tielen</strong>)</h5>
 
 ---
 
@@ -36,8 +33,8 @@ export const theme = {
 
 - A quick recap: unit tests
 - Property based testing
-  - key concepts
-  - examples
+  - Key concepts
+  - Examples
 - Questions
 
 ---
@@ -62,7 +59,13 @@ describe("my first unit test", () => {
 3 > expect
 ```
 
-- TODO picture of test output + how to run in mocha
+---
+
+## A quick recap: unit tests
+
+![Running unit tests](./images/unit_tests.png)
+
+- TODO same slide as previous?
 
 ---
 
@@ -80,7 +83,26 @@ describe("my first unit test", () => {
 
 - Javascript: [JSverify](https://github.com/jsverify/jsverify) (and others..)
 - Side by side with unit tests
-- TODO example in JS using verify (commutative addition)
+
+---
+
+```javascript
+describe("addition", () => {
+  property("addition is commutative", "nat", "nat",
+    (a, b) => a + b === b + a
+  );
+});
+```
+
+- TODO same slide as previous?
+
+---
+
+## Property based testing
+
+![Running property tests](./images/property_tests.png)
+
+- TODO same slide as previous? or with steps?
 
 ---
 
@@ -119,15 +141,42 @@ Important, no side effects!
 
 ## Generators
 
-- "Directed" randomness: e.g. -1, 0, 1, NaN, weird unicode chars, undefined, ...
-- Functions &#x2192; composable
+- "Directed" randomness: e.g. -1, 0, 1, NaN, undefined, unicode, ...
 - Library uses generators to automatically create input data
 
 ---
 
 ## Generators
 
-- TODO example, check if examples can be made in REPL
+```javascript
+const jsc = require("jsverify");
+
+const arbTime = jsc.record({
+  hours: jsc.integer(0, 23),
+  minutes: jsc.integer(0, 59),
+  seconds: jsc.integer(0, 59)
+});
+
+describe("time", () => {
+  property(
+    "time generator generates valid times",
+    arbTime,
+    time => true // property that uses random time...
+  );
+});
+```
+
+---
+
+## Generators
+
+![Generators in the REPL](./images/generated_json.png)
+
+```javascript
+const jsc = require("jsverify");
+const sampler = jsc.sampler(jsc.json, 100);
+sampler(20)
+```
 
 ---
 
