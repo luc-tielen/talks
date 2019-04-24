@@ -127,16 +127,15 @@ Important, no side effects!
 ## Generators
 
 - "Directed" randomness: e.g. -1, 0, 1, NaN, undefined, unicode, ...
-- Library uses generators to automatically create input data
+- Framework uses generators to automatically create input data
+- Composable
 
 ---
 
-## Generators
-
-```javascript
+```javascript Generators
 const jsc = require("jsverify");
 
-const arbTime = jsc.record({
+const arbitraryTime = jsc.record({
   hours: jsc.integer(0, 23),
   minutes: jsc.integer(0, 59),
   seconds: jsc.integer(0, 59)
@@ -145,10 +144,15 @@ const arbTime = jsc.record({
 describe("time", () => {
   property(
     "time generator generates valid times",
-    arbTime,
+    arbitraryTime,
     time => true // property that uses random time...
   );
 });
+----
+* > Example
+3:7 > Definition
+3[2], 12 > Hook generator into property
+13 > Actual usage
 ```
 
 ---
