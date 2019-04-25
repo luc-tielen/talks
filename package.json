@@ -10,15 +10,19 @@
     "mdx-deck": "^1.10.0",
     "mdx-deck-code-surfer": "^0.5.3",
     "mdx-deck-kabisa-theme":
-      "luc-tielen/mdx-deck-kabisa-theme#71a95f6ec2912f5fa824caf83b4e7276df1f306c",
-    "react": "^16.0.0",
-    "styled-components": "^3.0.0",
+      "luc-tielen/mdx-deck-kabisa-theme#a55732ea3b430603f4d4f00f1af690e96b61b09e",
     "prop-types": "^15.0.0",
+    "react": "^16.0.0",
     "react-markdown": "^4.0.6",
+    "styled-components": "^3.0.0",
     "tcp-port-used": "^1.0.1"
   },
   "devDependencies": {
     "file-loader": "^3.0.1",
+    "raw-loader": "^2.0.0",
+    "svg-inline-loader": "^0.8.0",
+    "svgo": "^1.2.2",
+    "svgo-loader": "^2.2.0",
     "webpack": "^4.0.0"
   },
   "resolutions": {
