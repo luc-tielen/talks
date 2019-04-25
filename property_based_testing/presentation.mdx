@@ -1,18 +1,12 @@
-
 import { Steps, Step } from "../components/Steps"
+import SVG from "../components/SVG"
 import Split from "../layouts/Split"
 import Markdown from "react-markdown"
 import { components } from "mdx-deck-code-surfer"
 import { withCodeSurfer } from "mdx-deck-kabisa-theme"
 import { CodeSurfer } from "mdx-deck-code-surfer";
-
 export const theme = withCodeSurfer(CodeSurfer)
 
-import styled from "styled-components";
-
-export const InlineImage = styled.img`
-  max-width: 100%;
-`;
 
 # Property based testing
 
@@ -70,7 +64,7 @@ describe("my first unit test", () => {
 ## Property based testing
 
 - Javascript: numerous implementations
-- Today: [JSverify](https://github.com/jsverify/jsverify) (and others..)
+- Today: [JSverify](https://github.com/jsverify/jsverify)
 - Side by side with unit tests
 - __yarn add --dev jsverify__
 
@@ -93,9 +87,10 @@ describe("addition", () => {
 
 ## High level view
 
-![System under test](./images/high_level_view_sut.svg)
+<SVG contents={require("./schematics/high_level_view_sut.dot")}
+     width="75vw"/>
 
-- System under test: "SUT"
+- System under test = SUT
 - Data in, data out
 
 ```notes
@@ -106,7 +101,8 @@ Important, no side effects!
 
 ## High level view (2)
 
-![Unit test](./images/high_level_view_unit_test.svg)
+<SVG contents={require("./schematics/high_level_view_unit_test.dot")}
+     width="75vw"/>
 
 - Single iteration
 - Manual created inputs
@@ -116,7 +112,8 @@ Important, no side effects!
 
 ## High level view (3)
 
-![Property test](./images/high_level_view_property_test.svg)
+<SVG contents={require("./schematics/high_level_view_property_test.dot")}
+     width="75vw"/>
 
 - Many iterations
 - Random data
@@ -159,19 +156,25 @@ describe("time", () => {
 
 ## Generators
 
-![Generators in the REPL](./images/generated_json.png)
-
 ```javascript
 const jsc = require("jsverify");
 const sampler = jsc.sampler(jsc.json, 100);
 sampler(20)
 ```
 
+![Generators in the REPL](./images/generated_json.png)
+
+```notes
+- jsc.json = another builtin generator
+- Who would write this input data by themselves? ==> much more thorough!
+- Can prototype generators in REPL
+```
+
 ---
 
 ## Shrinking
 
-![Shrinking](./images/shrinking_example.png)
+TODO (./images/shrinking_example.png)
 
 - Failing property: contains random, possibly complex data
 - Useful if it would find simpler case
@@ -180,7 +183,7 @@ sampler(20)
 
 ## Shrinking (2)
 
-![Shrinking algorithm](./images/shrinking_algorithm.png)
+TODO (./images/shrinking_algorithm.png)
 
 - Repeatedly try with simpler data until test doesn't fail
 - &#x2192; previous test is 'minimal' example
