@@ -1,6 +1,6 @@
 import { Steps, Step } from "../components/Steps"
+import Split2 from "../layouts/Split2"
 import SVG from "../components/SVG"
-import Split from "../layouts/Split"
 import Markdown from "react-markdown"
 import { components } from "mdx-deck-code-surfer"
 import { withCodeSurfer } from "mdx-deck-kabisa-theme"
@@ -174,7 +174,6 @@ sampler(20)
 
 ## Shrinking
 
-![](./images/shrinking_algorithm1.png)
 - Failing property: contains random, possibly complex data
 - Useful if it would find simpler case
 
@@ -182,19 +181,19 @@ sampler(20)
 
 ## Shrinking (2)
 
-![](./images/shrinking_algorithm2.png)
+<Split2>
+
 - Repeatedly try with simpler data until test doesn't fail
 - &#x2192; previous test is 'minimal' example
 - Example: generated a = 125, a &lt; 100
 
----
+![](./images/shrinking_algorithm1.png)
 
-## Shrinking (2)
+![](./images/shrinking_algorithm2.png)
 
 ![](./images/shrinking_algorithm3.png)
-- Repeatedly try with simpler data until test doesn't fail
-- &#x2192; previous test is 'minimal' example
-- Example: generated a = 125, a &lt; 100
+
+</Split2>
 
 ---
 
@@ -247,7 +246,7 @@ sampler(20)
 
 ---
 
-## Reading material
+## Links
 
 - [https://github.com/luc-tielen/talks](https://github.com/luc-tielen/talks)
 - [https://en.wikipedia.org/wiki/QuickCheck](https://en.wikipedia.org/wiki/QuickCheck)
