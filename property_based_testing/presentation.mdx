@@ -12,14 +12,6 @@ export const theme = withCodeSurfer(CodeSurfer)
 
 ---
 
-## Who am I
-
-![](./images/luc_slack_foto.jpeg)
-
-Luc Tielen (<strong>@luctielen</strong>)
-
----
-
 ## Table of contents
 
 - A quick recap: unit tests
@@ -64,23 +56,26 @@ describe("my first unit test", () => {
 ## Property based testing
 
 - Javascript: numerous implementations
-- Today: [JSverify](https://github.com/jsverify/jsverify)
+- Today: [fast-check](https://github.com/dubzzz/fast-check.git)
 - Side by side with unit tests
-- __yarn add --dev jsverify__
+- __yarn add --dev fast-check__
 
 ```javascript
+const { assert, property, nat } = require("fast-check");
+
 describe("addition", () => {
-  property("addition is commutative", "nat", "nat",
-    (a, b) => a + b === b + a
-  );
+  it("is commutative", () => {
+    assert(property(nat(), nat(), (a, b) => a + b === b + a));
+  });
 });
 ```
 
 ```notes
-- Hooks cleanly into Mocha
-- "property": like "it", but checks a property many times
-- for more difficult usecases: fall back to it again
-- Generators: discussed later on
+- Integrates well with Mocha
+- property: first X args: generators (see later), last = function to check
+- Property function needs to return a bool
+- assert: throws error if it fails with pretty printed output
+- top line will be left out in later slides
 ```
 
 ---
@@ -124,32 +119,35 @@ Important, no side effects!
 ## Generators
 
 - "Directed" randomness: e.g. -1, 0, 1, NaN, undefined, unicode, ...
-- Framework uses generators to automatically create input data
+- Library uses generators to automatically create input data
 - Composable
 
 ---
 
 ```javascript Generators
-const jsc = require("jsverify");
+const fc = require("fast-check");
 
-const arbitraryTime = jsc.record({
-  hours: jsc.integer(0, 23),
-  minutes: jsc.integer(0, 59),
-  seconds: jsc.integer(0, 59)
+const arbitraryTime = fc.record({
+  hours: fc.integer(0, 23),
+  minutes: fc.integer(0, 59),
+  seconds: fc.integer(0, 59)
 });
 
 describe("time", () => {
-  property(
-    "time generator generates valid times",
-    arbitraryTime,
-    time => true // property that uses random time...
-  );
+  it("time generator generates valid times", () => {
+    fc.assert(
+      fc.property(
+        arbritraryTime,
+        time => true // property that uses random time...
+      )
+    );
+  });
 });
 ----
 * > Example
 3:7 > Definition
-3[2], 12 > Hook generator into property
-13 > Actual usage
+3[2], 13 > Hook generator into property
+14 > Actual usage
 ```
 
 ---
@@ -157,17 +155,17 @@ describe("time", () => {
 ## Generators
 
 ```javascript
-const jsc = require("jsverify");
-const sampler = jsc.sampler(jsc.json, 100);
-sampler(20)
+const fc = require("fast-check");
+fc.sample(fc.jsonObject(), 5);
 ```
 
 ![Generators in the REPL](./images/generated_json.png)
 
 ```notes
-- jsc.json = another builtin generator
+- fc.jsonObject = another builtin generator
+- fc.sample: can generate X random values
 - Who would write this input data by themselves? ==> much more thorough!
-- Can prototype generators in REPL
+- Can prototype generators in REPL quickly
 ```
 
 ---
@@ -181,11 +179,34 @@ sampler(20)
 
 ## Shrinking (2)
 
+```javascript
+const { assert, property, nat } = require("fast-check");
+
+describe("shrinking examples", () => {
+  it("a < 100", () => {
+    assert(property(nat(), a => a < 100), { verbose: true });
+  });
+});
+```
+
+![](./images/shrinking_example.png)
+
+```notes
+- First example of failing property
+- Lists random seed for reproducability
+- Counter example + generated values for every provided generator
+- Generated values go all the way down to 0
+```
+
+---
+
+## Shrinking (3)
+
 <Split2>
 
 - Repeatedly try with simpler data until test doesn't fail
 - &#x2192; previous test is 'minimal' example
-- Example: generated a = 125, a &lt; 100
+- Example: a = 125, a &lt; 100
 
 ![](./images/shrinking_algorithm1.png)
 
@@ -197,15 +218,106 @@ sampler(20)
 
 ---
 
-## Business logic example
+```javascript Business logic example
+// bank-logic.js
+const transaction = (fromAccount, toAccount, amount) => {
+  if (fromAccount.amount > amount) {
+    const fromUpdated = { amount: fromAccount.amount - amount };
+    const toUpdated = { amount: toAccount.amount + amount };
+    return { fromUpdated, toUpdated };
+  }
 
-- TODO bank example
+  return { error: "insufficient funds" };
+};
+----
+* > Bank example
+3:6 > success
+9 > error case
+```
 
 ---
 
-## "Parallel map" example
+```javascript Business logic (2)
+const fc = require("fast-check");
+const transaction = require("bank-logic");
 
-- TODO find good counterpart for javascript
+const account = (min, max) =>
+  fc.record({
+    amount: fc.integer(min, max)
+  });
+
+describe("bank", () => {
+  it("updates both accounts when transaction when completed", () => {
+    fc.assert(
+      fc.property(
+        account(500, 1000),
+        account(500, 1000),
+        fc.integer(100, 200),
+        (from, to, amount) => {
+          const { fromUpdated, toUpdated } = transaction(from, to, amount);
+          expect(fromUpdated.amount).to.eql(from.amount - amount);
+          expect(toUpdated.amount).to.eql(to.amount + amount);
+        }
+      )
+    );
+  });
+
+  it("aborts transaction when account has insufficient funds", () => {
+    fc.assert(
+      fc.property(
+        account(100, 200),
+        account(100, 200),
+        fc.integer(300, 500),
+        (from, to, amount) => {
+          const { error } = transaction(from, to, amount);
+          expect(error).to.eql("Insufficient funds");
+        }
+      )
+    );
+  });
+});
+----
+* > Test code
+4:8 > Account generator
+10:23 > Happy path
+13:15 > Generators in use
+17:19 > Testing the transaction
+25:37 > Non-happy path
+28:30 > Generators (insufficient funds!)
+32:33 > Testing the transaction
+```
+
+```notes
+- Generators: can be parameterized further (function wrapper)
+```
+
+---
+
+## Async property example
+
+```javascript
+const fc = require("fast-check");
+
+describe("Promise.all", () => {
+  it("returns promise that resolves to array with results of promises", async () => {
+    await fc.assert(
+      fc.asyncProperty(fc.array(fc.nat()), async values => {
+        const promise = Promise.all(values.map(val => Promise.resolve(val)));
+        const result = await promise;
+        return result.every((value, index) => value === values[index]);
+      })
+    );
+  });
+});
+```
+
+```notes
+Can run any code in properties => also stuff like testing APIs, preact-render-spy, ... is possible!
+Important:
+- await fc.assert is now needed
+- fc.asyncProperty
+- [...] === [...] would fail because of how array comparison works in JS
+```
 
 ---
 
@@ -232,8 +344,13 @@ sampler(20)
 ## Testing stateful systems
 
 - Properties so far: no external state across function calls
-- TODO check if possible with JSverify
+- fast-check has support for this too!
 - Out of scope for today
+
+```notes
+This could be a presentation on it's own...
+Stateful UIs are also possible using this!
+```
 
 ---
 
@@ -250,7 +367,7 @@ sampler(20)
 
 - [https://github.com/luc-tielen/talks](https://github.com/luc-tielen/talks)
 - [https://en.wikipedia.org/wiki/QuickCheck](https://en.wikipedia.org/wiki/QuickCheck)
-- [https://github.com/jsverify/jsverify](https://github.com/jsverify/jsverify)
+- [https://github.com/dubzzz/fast-check.git](https://github.com/dubzzz/fast-check.git)
 - [https://kabisa.nl](https://kabisa.nl)
 - [https://theguild.nl](https://theguild.nl)
 
