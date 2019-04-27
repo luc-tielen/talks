@@ -1,0 +1,21 @@
+
+digraph {
+  node[style="filled,solid" fontname="helvetica"];
+  edge[color=transparent];
+  bgcolor=transparent;
+  graph[ranksep="0.1"];
+  rankdir = "LR";
+
+  a[color="transparent" fontcolor="red" fontsize=20];
+  b[color="transparent" fontcolor="red" fontsize=20];
+  c[color="transparent" fontcolor="red" fontsize=20];
+  Inputs[color="#42b6f4" shape=rarrow width=1.5 height=0.75];
+  Outputs[color="#42b6f4" shape=rarrow width=1.5 height=0.75];
+  SUT[color="#ffcc7b" shape=rectangle width=1.25 height=1.25 label="\"+\"" fontsize=20];
+
+  a -> Inputs;
+  b -> Inputs;
+  Inputs -> SUT;
+  SUT -> Outputs;
+  Outputs -> c;
+}
