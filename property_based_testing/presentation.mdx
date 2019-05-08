@@ -61,11 +61,12 @@ describe("my first unit test", () => {
 - __yarn add --dev fast-check__
 
 ```javascript
-const { assert, property, nat } = require("fast-check");
+const { assert, property, integer } = require("fast-check");
 
 describe("addition", () => {
   it("is commutative", () => {
-    assert(property(nat(), nat(), (a, b) => a + b === b + a));
+    assert(property(integer(), integer(),
+           (a, b) => a + b === b + a));
   });
 });
 ```
@@ -150,6 +151,10 @@ describe("time", () => {
 14 > Actual usage
 ```
 
+```notes
+No support for classes yet (?), but you can `new` an object after data is generated.
+```
+
 ---
 
 ## Generators
@@ -193,6 +198,7 @@ describe("shrinking examples", () => {
 
 ```notes
 - First example of failing property
+- nat: natural number (>= 0)
 - Lists random seed for reproducability
 - Counter example + generated values for every provided generator
 - Generated values go all the way down to 0
@@ -221,17 +227,17 @@ describe("shrinking examples", () => {
 ```javascript Business logic example
 // bank-logic.js
 const transaction = (fromAccount, toAccount, amount) => {
-  if (fromAccount.amount > amount) {
-    const fromUpdated = { amount: fromAccount.amount - amount };
-    const toUpdated = { amount: toAccount.amount + amount };
-    return { fromUpdated, toUpdated };
+  if (fromAccount.amount >= amount) {
+    const from = { amount: fromAccount.amount - amount };
+    const to = { amount: toAccount.amount + amount };
+    return { from, to };
   }
 
-  return { error: "insufficient funds" };
+  return { error: "Insufficient funds" };
 };
 ----
 * > Bank example
-3:6 > success
+3:6 > success case
 9 > error case
 ```
 
@@ -253,10 +259,10 @@ describe("bank", () => {
         account(500, 1000),
         account(500, 1000),
         fc.integer(100, 200),
-        (from, to, amount) => {
-          const { fromUpdated, toUpdated } = transaction(from, to, amount);
-          expect(fromUpdated.amount).to.eql(from.amount - amount);
-          expect(toUpdated.amount).to.eql(to.amount + amount);
+        (fromAccount, toAccount, amount) => {
+          const { from, to } = transaction(fromAccount, toAccount, amount);
+          expect(from.amount).to.eql(fromAccount.amount - amount);
+          expect(to.amount).to.eql(toAccount.amount + amount);
         }
       )
     );
@@ -268,8 +274,8 @@ describe("bank", () => {
         account(100, 200),
         account(100, 200),
         fc.integer(300, 500),
-        (from, to, amount) => {
-          const { error } = transaction(from, to, amount);
+        (fromAccount, toAccount, amount) => {
+          const { error } = transaction(fromAccount, toAccount, amount);
           expect(error).to.eql("Insufficient funds");
         }
       )
@@ -293,26 +299,29 @@ describe("bank", () => {
 
 ---
 
-## Async property example
-
-```javascript
+```javascript Async properties
 const fc = require("fast-check");
 
-describe("Promise.all", () => {
-  it("returns promise that resolves to array with results of promises", async () => {
-    await fc.assert(
-      fc.asyncProperty(fc.array(fc.nat()), async values => {
-        const promise = Promise.all(values.map(val => Promise.resolve(val)));
-        const result = await promise;
-        return result.every((value, index) => value === values[index]);
-      })
-    );
-  });
+describe("Promise.resolve", () => {
+  it("returns promise that resolves to value passed in",
+    async () => {
+      await fc.assert(
+        fc.asyncProperty(fc.nat(), async value => {
+          const result = await Promise.resolve(value);
+          return result === value;
+        })
+      );
+    }
+  );
 });
+----
+* > Async example
+5[1], 6[1], 7[2, 11], 8[5] > Changes needed for async property
 ```
 
 ```notes
-Can run any code in properties => also stuff like testing APIs, preact-render-spy, ... is possible!
+Can run any code in properties (long running bank transaction, ...)
+=> also stuff like testing APIs, preact-render-spy, ... is possible!
 Important:
 - await fc.assert is now needed
 - fc.asyncProperty
@@ -338,6 +347,10 @@ Important:
 - Checking against simplified model
 - Checking domain invariants (business rules)
 - ...
+
+```notes
+With mocha: can make generic properties for this by putting the property tests in a helper function
+```
 
 ---
 
