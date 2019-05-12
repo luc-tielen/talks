@@ -1,0 +1,16 @@
+
+
+graph {
+  node[style="filled,solid" fontname="helvetica"];
+  edge[color=transparent];
+  bgcolor=transparent;
+  graph[ranksep="0.1"];
+  rankdir = "LR";
+
+  Inputs[color="#42b6f4" shape=rarrow width=1.5 height=0.75];
+  Outputs[color="#42b6f4" shape=rarrow width=1.5 height=0.75];
+  Function[color="#ffcc7b" shape=rectangle width=1.25 height=1.25];
+
+  Inputs -- Function;
+  Function -- Outputs;
+}
