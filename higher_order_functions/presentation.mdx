@@ -1,0 +1,364 @@
+import SVG from "../components/SVG"
+import { components } from "mdx-deck-code-surfer"
+import { withCodeSurfer } from "mdx-deck-kabisa-theme"
+import { CodeSurfer } from "mdx-deck-code-surfer";
+export const theme = withCodeSurfer(CodeSurfer)
+
+
+# Higher order functions
+
+---
+
+## Table of contents
+
+- Introduction
+- What is a (higher order) function
+- Why higher order functions?
+- Examples
+
+---
+
+## Introduction
+
+![](./images/real_life_OO.png)
+
+
+```notes
+- literally first picture I came across when googling "OO programming reality"
+- Worked in a few legacy codebases in the past
+- Very complex, deeply coupled code
+- Deep inheritance trees, not a lot of composition
+- Mutable state everywhere
+- &#x2192; has to be a better way... FP?
+```
+
+---
+
+## Functions
+
+<SVG contents={require("./schematics/function_high_level_view.dot")}
+     width="75vw"/>
+
+- Data transformations
+- For now: assume pure functions
+- Composable into larger functions &#x2192; reuse!
+
+```notes
+- Used this schematic before in property based testing talk: one of the reasons testing FP code is so easy
+- Function can be observed as a black box that applies a transformation to some data
+- Purity: no effects (I/O, state updates, ...) visible outside of this function
+- All inputs have to be supplied => deterministic!
+```
+
+---
+
+## Example function
+
+```javascript
+// plus :: (Int, Int) -> Int
+const plus = (x, y) => x + y;
+
+const x = plus(1, 2);  // x is now 3!
+```
+
+```notes
+- Javascript used for examples during this talk
+- Added a Haskell type signature (will become more useful later)
+- Explain syntax (JS + Haskell) for those not familiar
+- Separation of behavior and data
+```
+
+---
+
+## Higher order functions
+
+- Functions are data too! &#x2192; "first class" functions
+- Variations:
+  - Function that takes function(s) as argument
+  - Function that returns another function
+  - Combination of the above
+
+```notes
+- Mention closures
+- Something I look for in every new language I pick up
+```
+
+---
+
+## Example 1: functions as argument
+
+```javascript
+// log :: (String -> String) -> String -> ()
+const log = (formatter, message) => {
+  const formattedMessage = formatter(message);
+  console.log(formattedMessage);
+}
+
+log(message => message, "Hello world!");
+log(
+  message => `${new Date().toISOString()} - ${message}`,
+  "Hello world!"
+);
+```
+
+```notes
+- 'log' is here the higher order function
+- Takes a formatter function to prettyprint output
+```
+
+---
+
+## Example 2: function as return value
+
+```javascript
+// isInRange :: (Int, Int) -> (Int -> Bool)
+const isInRange = (min, max) => value =>
+  min <= value && value <= max;
+
+// inRange :: Int -> Bool
+const inRange = isInRange(1, 10);
+console.log(inRange(7));  // true
+console.log(inRange(11));  // false
+```
+
+---
+
+## Why would you want to do this?
+
+- Composable
+- Easy to test
+- "State" is much more isolated (closures)
+
+
+```notes
+- Reusable, functions all the way down &#x2192; DRY
+- Build out your own "language" based on a set of primitives
+- Testing: all inputs are explicitly passed in, can be swapped out with simple functions
+- Less error prone
+```
+
+---
+
+## Relation to design patterns
+
+- All DPs can be created with just functions
+- Often more compact/simple &#x2192; easier to maintain
+
+```notes
+- Some examples follow on the following slides
+```
+
+---
+
+```javascript Command pattern
+class LogCommand {
+  execute(msg) {
+    console.log(msg);
+  }
+}
+
+const command = new LogCommand();
+command.execute(msg);
+
+// vs.
+
+const log = msg => console.log(msg);
+log(msg);
+----
+* > Command pattern
+1:8 > OO approach
+12:13 > FP approach
+```
+
+---
+
+```javascript Decorator pattern
+class LogFormatter {
+  format(msg) {
+    return `${new Date().toISOString()} - ${msg}`
+  }
+}  // and many other formatters
+
+console.log(new LogFormatter().format(msg));
+
+// vs.
+
+const log = (formatter, message) => {
+  const formattedMessage = formatter(message);
+  console.log(formattedMessage);
+}
+----
+* > Decorator pattern
+1:7 > OO approach
+11:14 > FP approach
+```
+
+```notes
+- Examples may be a bit unfair ;) but very often objects are overkill and not needed at all!
+- Only use as much power as you need
+- Also: in existing codebases, can combine the two by wrapping formatter in a function!
+```
+
+---
+
+### Factory + strategy pattern
+
+```javascript
+const calculate = operator => {
+  switch (operator) {
+    case "+": return (x, y) => x + y;
+    case "-": return (x, y) => x - y;
+    case "*": return (x, y) => x * y;
+    case "/": return (x, y) => x / y;
+  }
+};
+
+calculate("+")(2, 3)  // 5
+calculate("/")(2, 7)  // 0.28
+```
+
+```notes
+- Factory part: switch statement, returns corresponding function
+- Strategy: each function has same signature, performs a different action
+- OO approach would build a separate strategy object for each operator
+```
+
+---
+
+## Currying
+
+```javascript
+// plus :: Int -> Int -> Int
+const plus = a => b => a + b;
+```
+
+- Transform functions to have only 1 argument at a time
+- Some languages do this automatically
+- Pro: Uniform structure
+- Con: less performance (sometimes)
+
+
+```notes
+- Currying = taking this idea of higher order functions 1 step further
+- Simplest example: plus
+- Function with 2 args = function with 1 arg that returns another function with 1 arg, that then returns a value
+  => Functions with 1 arg are the most powerful
+- ->: Right associative, parentheses can be left out
+- Uniform structure: more reuse possible
+```
+
+---
+
+```javascript Currying examples
+[1, 2, 3].map(x => x + 1);  // [2, 3, 4]
+
+// map :: (a -> b) -> [a] -> [b]
+const map = func => array =>
+  array.map(func);
+
+// timesTwo :: [Int] -> [Int]
+const timesTwo = map(x => x * 2);
+timesTwo([1, 2, 3]);  // [2, 4, 6]
+----
+* > Example: 'map'
+1 > Standard map (non-curried)
+3:5 > Curried version
+7:9 > Using curried map
+```
+
+```notes
+- Ask who is familiar with map, explain what it does
+- Examples: pragmatic approach by reusing existing code
+- Leads to all kinds of code reuse (it's again another function)
+- Doesnt have to be curried all the way => middleground
+```
+
+---
+
+```javascript Currying examples (2)
+[1, 2, 3].filter(x => x >= 2);  // [2, 3]
+
+// filter :: (a -> Bool) -> [a] -> [a]
+const filter = func => array =>
+  array.filter(func);
+
+const filterEven = filter(x => x % 2 === 0);
+filterEven([1, 2, 3, 4, 5, 6, 7]);  // [2, 4, 6]
+----
+* > Example: 'filter'
+1 > Standard filter (non-curried)
+3:5 > Curried version
+7:8 > Using curried filter
+```
+
+---
+
+```javascript Currying examples (3)
+[1, 2, 3].reduce((acc, elem) => acc + elem, 0);  // 6
+
+// reduce :: (acc -> elem -> acc) -> acc -> [elem] -> acc
+const reduce = func => start => array =>
+  array.reduce((acc, elem) => func(acc)(elem), start);
+
+const sum = reduce(x => y => x + y)(0);
+sum([1, 2, 3, 4]);  // 10
+
+const product = reduce(x => y => x * y)(1);
+product([1, 2, 3, 4]);  // 24
+----
+* > Example: 'reduce'
+1 > Standard reduce (non-curried)
+3:5 > Curried version
+7:11 > Using curried reduce
+```
+
+---
+
+```javascript Currying examples (4)
+// identity :: a -> a
+const identity = x => x;
+
+// composes from right to left
+// compose :: (b -> c) -> (a -> b) -> (a -> c)
+const compose = b2c => a2b => a => b2c(a2b(a));
+
+// composeMany :: [(a -> a)] -> (a -> a)
+const composeMany = reduce(compose)(identity);
+
+// func :: Double -> Double
+const func = composeMany([x => x * 2, x => x + 4, x => x / 5]);
+map(func)([100, 42, 1337]);  // [48, 24.8, 542.8]
+----
+* > Going a little crazy
+1:2 > "no-op" function
+4:6 > Composing functions
+8:9 > Composing many functions
+11:13 > Using a combined function
+```
+
+```notes
+- Very quickly you gain a lot of power and expressivity
+- Still fairly easy to reason about
+- Easily testable!
+- Compare this to what you normally write in OO (decorator patterns etc)...
+```
+
+---
+
+## Conclusion
+
+- Higher order functions are very versatile and powerful
+- Little to no downsides to them (except for learning curve)
+- Standard tool in the FP toolkit
+
+---
+
+## Links
+
+- [https://github.com/luc-tielen/talks](https://github.com/luc-tielen/talks)
+- [https://github.com/luc-tielen/ast-matchers.git](https://github.com/luc-tielen/ast-matchers.git)
+
+---
+
+## Questions?
+
