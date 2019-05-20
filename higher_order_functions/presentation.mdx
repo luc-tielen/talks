@@ -88,7 +88,7 @@ const x = plus(1, 2);  // x is now 3!
 ## Example 1: functions as argument
 
 ```javascript
-// log :: (String -> String) -> String -> ()
+// log :: ((String -> String) -> String) -> ()
 const log = (formatter, message) => {
   const formattedMessage = formatter(message);
   console.log(formattedMessage);
@@ -104,6 +104,7 @@ log(
 ```notes
 - 'log' is here the higher order function
 - Takes a formatter function to prettyprint output
+- '()' is like void in javascript
 ```
 
 ---
