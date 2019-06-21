@@ -4,8 +4,12 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(svg|png|jpg)$/,
+        test: /\.(png|jpg)$/,
         use: [{ loader: "file-loader" }]
+      },
+      {
+        test: /\.svg$/,
+        use: [{ loader: "svg-inline-loader" }, { loader: "svgo-loader" }]
       },
       {
         test: /\.dot$/,

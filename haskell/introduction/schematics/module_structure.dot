@@ -1,0 +1,10 @@
+digraph {
+  rankdir = "LR";
+  bgcolor=transparent;
+  node[color=white style="filled,solid"];
+  edge[color=white fontcolor=white];
+
+  Module -> Decl;
+  Decl -> Expr;
+  Expr -> Decl;
+}
