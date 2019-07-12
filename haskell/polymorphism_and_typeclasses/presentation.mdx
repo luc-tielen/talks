@@ -1,0 +1,303 @@
+import SVG from "../../components/SVG";
+import Title from "../../components/Title";
+import { components } from "mdx-deck-code-surfer"
+import { withCodeSurfer } from "mdx-deck-kabisa-theme"
+import { CodeSurfer } from "mdx-deck-code-surfer";
+export const theme = withCodeSurfer(CodeSurfer)
+
+
+<SVG contents={require("./images/haskell_logo.svg")} width="20%"/>
+<Title contents="Introduction to Haskell, pt 2"/>
+
+```haskell
+quicksort [] = []
+quicksort (x:xs) = quicksort smaller ++ [x] ++ quicksort larger
+  where smaller = [y | y <- xs, y <= x]
+        larger  = [y | y <- xs, y > x]
+```
+
+```notes
+- quick recap from last time:
+  - showed some basic syntax and examples
+  - explained ecosystem a little bit
+```
+
+---
+
+## Table of contents
+
+- Polymorphism
+- Intro to typeclasses
+- Exercises
+
+```notes
+- Not much new things today, first want to focus on exercises since didn't get around to that last time
+- Focus on typeclasses since they appear everywhere in Haskell
+```
+
+---
+
+## Polymorphism
+
+- "A value is polymorphic if there is more than one type it can have."
+- Haskell:
+  - only way of code reuse
+  - key feature of type system
+- Other languages: "generics"
+
+
+```haskell
+func1 :: Bool -> Bool
+
+func2 :: Char -> Char
+
+func3 :: a -> a
+```
+
+```notes
+Examples will be revisited in a later slide
+```
+
+---
+
+## Modes of programming
+
+1. Very concrete/specific types
+2. Ultra-generic types
+3. Somewhere in between (typeclasses)
+
+```notes
+In practice, the 3 modes can be interleaved really easily
+```
+
+---
+
+### 1. Concrete types
+
+- No (or little) reuse of functions
+- Great for code in specific situations
+- Example: domain logic
+
+```haskell
+computeTotalPrice :: ShoppingCart -> Money
+```
+
+---
+
+### 2. Ultra generic types
+
+- Types containing type variables
+- **Completely opaque** &#x2192; can only pass the value around
+- Example: "code plumbing" or "connect the dots"
+
+```haskell
+map :: (a -> b) -> [a] -> [b]
+```
+
+```notes
+- Type var is completely opaque, we know nothing about it!
+- Only way map can work is if it is applied to each element of input list.
+```
+
+---
+
+### 3. Typeclasses
+
+- Sometimes, you don't want complete opaque data
+- What if we could require only certain properties of our data?
+- (a.k.a. "traits" / "open interfaces" in other languages)
+
+---
+
+```haskell 3. Typeclasses (examples)
+class Eq a where
+  (==) :: a -> a -> Bool
+  (/=) :: a -> a -> Bool
+  -- The real Eq definition provides default implementations here too,
+  -- often only have to implement ==, and get /= for free!
+
+-- Now we can make instances for all types that can be checked for equality
+instance Eq Bool where
+  True == True = True
+  False == False = True
+  _ == _ = False
+
+instance Eq Dog where
+  (Dog name1 age1) == (Dog name2 age2) =
+    name1 == name2 && age1 == age2
+  -- Name and Age have to implement Eq too, otherwise type error!
+
+-- etc.
+----
+1:5 > Type class definition
+7:11 > Implementation for booleans
+13:19 > (Naive 😅) implementation for dogs
+```
+
+```notes
+- Definition literally copied from Haskell (:i Eq in REPL)
+- ADTs + typeclasses form a really structured way of composing behavior together
+- We can extend functionality of existing data types
+- Inside the instance, we know which type it is, so we can be more specific!
+```
+
+---
+
+### 3. Typeclasses (in functions)
+
+- New syntax: **=>**
+- Everything before '=>' is a (typeclass) constraint
+- Extensible: supports each type that implements typeclass
+
+```haskell
+print :: Show a => a -> IO ()
+
+(==) :: Eq a => a -> a -> Bool
+```
+
+---
+
+```haskell 3. Typeclasses (Superclasses)
+class Eq a => Ord a where
+  compare :: a -> a -> Ordering
+  (<) :: a -> a -> Bool
+  (<=) :: a -> a -> Bool
+  (>) :: a -> a -> Bool
+  (>=) :: a -> a -> Bool
+  max :: a -> a -> a
+  min :: a -> a -> a
+  {-# MINIMAL compare | (<=) #-}
+
+-- Note: Eq a does not show up here, since it is implied by Ord
+(<=) :: Ord a => a -> a -> Bool
+----
+* > Ord (ordering) example
+1[2:10], 4, 6 > 'Ord a' requires 'Eq a' (in general)
+11:12 > Full type signature of <=
+```
+
+```notes
+- Definition: '-i Ord' in GHCi
+- Not going too much into detail now, but just now it is there
+- "For something be orderable, it first needs to be comparable"
+```
+
+---
+
+## 3. Typeclasses (deriving)
+
+```haskell
+data Dog = Dog Name Age
+  deriving (Show, Eq, Ord)
+```
+
+- Compiler can generate (sensible) default code
+- By default: Show, Eq, Ord, Read, Bounded, Enum, Ix
+- Others: requires language extension
+
+---
+
+## Final note on parametricity
+
+- How many ways to implement the following functions?
+- Give other possible names for these functions
+
+```haskell
+??? :: Bool -> Bool
+
+??? :: String -> String
+
+??? :: a -> a
+
+??? :: Show a => a -> IO ()
+```
+
+&#x2192; Type signatures contain a lot of information!
+
+```notes
+function1: identity, not, xor
+function2: identity, or modifyString
+function3: identity
+function4: print (but could also be launchMissiles, or anything that performs IO!)
+
+Less amount of possibilities is important because then there are less ways
+to implement a function &#x2192; less chance of bugs!
+Less posbilities also makes it easier to reason about code
+
+Only be as specific as you need to be &#x2192; most opportunity for reasoning
+```
+
+---
+
+## Conclusion
+
+- Typeclasses and generic functions are great for reusable code
+- Haskell offers fine grained control of limiting possibilities in functions
+- By limiting possibilities, we can reason a lot more about code
+
+---
+
+## Next time...
+
+- Semigroups
+- Monoids
+- Foldable (/ Traversable)
+- More exercises?
+
+---
+
+## Mob / pair programming
+
+- Download and unpack this [tarball](https://github.com/luc-tielen/talks/blob/master/haskell/introduction/example_project/introduction-to-haskell.tar.gz)
+- Common stack commands: see Makefile
+- Short exercises: `make repl`
+- Longer exercises: add to Main.hs & `make test`
+
+- Form small groups (2-3 people?)
+- Good luck! 😉
+
+```notes
+- :? for possible commands in REPL
+```
+
+---
+
+## Warming up: Hole driven development
+
+- Let compiler fill in the gaps
+- Useful for both generic and specific code
+- Programmer decides on "useful" solution
+- Showcase with some examples:
+  - map
+  - head of list
+  - Eq instance for "Maybe a"
+
+---
+
+## Exercises (1)
+
+- Experiment with the syntax!
+- Try out `:t`, `:i`, `:?`, ... in REPL (ghci)
+- Make your own boolean data type
+- Write fizzbuzz (yep)
+- Write quicksort
+
+---
+
+## Exercises (2)
+
+- Insert an element into list at specific index
+- Drop first N elements of a list
+- Take first N elements of a list
+- Duplicate each element of a list X times
+- Write zip :: [a] -> [b] -> [(a, b)]
+
+---
+
+## Exercises (3)
+
+- Write map / filter / foldl ("reduce")
+- Write a greet program for interacting with a user
+- Write pretty printer for a TODO-list
+- ...
+
