@@ -1,0 +1,340 @@
+import Title from "../../components/Title";
+import SVG from "../../components/SVG";
+import { components } from "mdx-deck-code-surfer"
+import { withCodeSurfer } from "mdx-deck-kabisa-theme"
+import { CodeSurfer } from "mdx-deck-code-surfer";
+export const theme = withCodeSurfer(CodeSurfer)
+
+
+<SVG contents={require("./images/haskell_logo.svg")} width="20%"/>
+<Title contents="Functors"/>
+
+```haskell
+just42 = (+ 1) <$> Just 41
+```
+
+```notes
+- This is the first part of a trilogy
+```
+
+---
+
+## Table of contents
+
+- Introduction
+- Functors
+- Exercises
+
+---
+
+## Introduction
+
+- The next 3 talks will be closely related
+- Will try to separate concepts as much as possible
+- Today: first part of the trilogy
+- Fun fact: this talk is about a single function
+
+---
+
+```haskell Introduction
+listMap :: (a -> b) -> [a] -> [b]
+listMap f [] = []
+listMap f (x:xs) = f x : map f xs
+
+data Tree a = Leaf a
+            | Branch (Tree a) (Tree a)
+
+treeMap :: (a -> b) -> Tree a -> Tree b
+treeMap f (Leaf a) = Leaf $ f a
+treeMap f (Branch l r) =
+  Branch (treeMap f l) (treeMap f r)
+
+maybeMap :: (a -> b) -> Maybe a -> Maybe b
+maybeMap f Nothing = Nothing
+maybeMap f (Just a) = Just (f a)
+----
+1:3 > Lists
+5:11 > Trees
+13:15 > Maybe
+```
+
+---
+
+## Introduction
+
+- Let's take a step back
+- Can we generalize this pattern?
+
+```haskell
+type List a = [a]
+
+listMap  :: (a -> b) -> List  a -> List  b
+treeMap  :: (a -> b) -> Tree  a -> Tree  b
+maybeMap :: (a -> b) -> Maybe a -> Maybe b
+```
+
+---
+
+```haskell Functor to the rescue!
+class Functor (f :: Type -> Type) where
+  fmap :: (a -> b) -> f a -> f b
+  (<$) :: a -> f b -> f a
+  {-# MINIMAL fmap #-}
+
+(<$>) :: (a -> b) -> f a -> f b
+(<$>) = fmap
+
+
+instance Functor [] where
+  fmap = listMap
+
+instance Functor Tree where
+  fmap = treeMap
+
+instance Functor Maybe where
+  fmap = maybeMap
+----
+1:4 > Typeclass definition
+1:2 > Most important part
+6:7 > Infix map operator
+10:11 > Implementation for List
+13:14 > Implementation for Tree
+16:17 > Implementation for Maybe
+```
+
+```notes
+- Type variable f has kind: Type -> Type (previously * -> *)
+- Possible in Haskell because of support for "Higher Kinded Types"
+- In OCaml we would need to fully write out type each time...
+```
+
+---
+
+## Functor typeclass
+
+- Allows transforming entire data type
+- Can have certain effects (e.g. Maybe only transforms a Just)
+
+---
+
+```haskell Some more instances
+-- Identity on type level
+data Identity a = Identity a
+
+instance Functor Identity where
+  fmap f (Identity a) = Identity (f a)
+
+
+-- Const on type level
+data Const a b = Const a
+
+instance Functor (Const a) where
+  fmap f (Const a) = Const a
+  -- f can't be applied, types do not match;
+  -- 'a' stays the same!
+
+
+instance Functor ((,) a) where
+  fmap f (a, b) = (a, f b)
+
+
+data Either a b = Left a | Right b
+
+instance Functor (Either a) where
+  fmap f (Left a) = Left a
+  fmap f (Right b) = Right (f b)
+
+
+-- Functor is not limited to containers
+instance Functor ((->) a) where
+  fmap f g = f . g
+
+-- Implemented in GHC
+instance Functor IO where
+  fmap f action = do
+    result <- action
+    pure $ f action
+
+-- and many more (hint: ':i Functor' in REPL)
+----
+1:5 > implementation for Identity
+8:14 > implementation for Const
+17:18 > implementation for 2 element tuples
+21:25 > implementation for Either
+28:30 > implementation for functions
+32:38 > implementation for IO
+```
+
+```notes
+- For all of these: try building with hole driven development!
+- "Container-like" things are often functors, but not all containers!
+- But also more abstract concepts like Maybe, Either, functions, IO, ...
+- Types with more type variables can be made functors on last type variable
+```
+
+---
+
+## A different perspective
+
+```haskell
+fmap :: (a -> b) -> f a -> f b
+
+-- because of currying & right associativity of functions:
+fmap :: (a -> b) -> (f a -> f b)
+```
+
+&#x2192; fmap 'upgrades' function to transform entire functor type
+
+---
+
+## Laws
+
+1. fmap g . fmap f = fmap (g . f)
+2. fmap id = id
+
+```notes
+- rule 1 is used inside GHC to optimize mapping multiple times
+- this also means: set is not a functor, since it does not always preserve structure (but it does have a map)
+```
+
+---
+
+## Functor examples in the ecosystem
+
+- [containers](http://hackage.haskell.org/package/containers)
+- [async](http://hackage.haskell.org/package/async)
+- [megaparsec](http://hackage.haskell.org/package/megaparsec)
+- and many more...
+
+---
+
+```haskell Maybe example
+import Data.Aeson ( Value )
+
+newtype Name = Name Text
+newtype Age = Age Int
+data Dog Name Age
+
+newtype Sound = Sound Text
+
+-- This could also directly be an IO action that prints to screen
+woof :: Dog -> Sound
+woof (Dog (Name name) (Age age)) =
+  let times = max 1 (10 - age)
+      sound = intersperse " " $ replicate times "woof"
+  in Sound $ name <> ": " <> sound
+
+
+parseDogJson :: Value -> Maybe Dog
+
+processDogJson :: Value -> IO ()
+processDogJson json = do
+  let maybeDog = parseDogJson json
+      maybeSound = fmap woof maybeDog
+      -- many more computations could be mapped before inspecting final value
+  case maybeSound of
+    Nothing -> print "*crickets*"
+    Just (Sound sound) -> print sound
+----
+* > Maybe example
+3:7 > Some data types
+9:14 > A function that requires a "Dog"
+17 > Assume this function exists
+19:26 > Function that performs action based on JSON input
+24:26 > Final check to see what's inside Maybe
+```
+
+---
+
+```haskell IO examples
+data Input = Input String
+
+handleInput :: Input -> IO ()
+handleInput input = _
+
+example = do
+  input <- Input <$> readFile "foo.bar"
+  handleInput input
+
+
+-- Snippet from LYAH
+import Data.List ( intersperse, reverse )
+import Data.Char ( toUpper )
+
+example2 = do
+  line <- intersperse '-' . reverse . map toUpper <$> getLine
+  putStrLn line
+----
+1:8 > IO actions can be mapped over
+11:17 > fmap allows easy usage of pure functions on data from impure actions
+```
+
+---
+
+## Example ported from Elm
+
+```haskell
+-- A data type from a popular Elm package:
+-- https://package.elm-lang.org/packages/ohanhi/remotedata-http/latest/
+data RemoteData e a
+  = NotAsked
+  | Loading
+  | Failure e
+  | Success a
+
+instance Functor (RemoteData e) where
+  fmap f NotAsked = NotAsked
+  fmap f Loading = Loading
+  fmap f (Failure e) = Failure e
+  fmap f (Success a) = Success $ f a
+```
+
+```notes
+- Could be used in a functional reactive programming framework
+- Can map functions over remote data without knowing whether data
+```
+
+---
+
+```haskell DeriveFunctor extension
+-- This has to be at top of file
+-- (or in package.yaml/cabal file of project)
+
+{-# LANGUAGE DeriveFunctor #-}
+
+module Expr where
+
+data Expr a
+  = Value a
+  | Plus (Expr a) (Expr a)
+  | Mul (Expr a) (Expr a)
+  deriving Functor
+  -- compiler now generates instance for you
+```
+
+---
+
+## Conclusion
+
+- map is incredibly useful for transforming data
+- Haskell &#x2192; works on many data types
+
+---
+
+## Not seen today
+
+- Bifunctors
+- Contravariant functors
+
+---
+
+## Next time
+
+- Applicative Functors
+
+---
+
+## Links
+
+- [haskell wiki: Functors](https://wiki.haskell.org/Functor)
+- [LYAH page for functors](http://learnyouahaskell.com/functors-applicative-functors-and-monoids)
