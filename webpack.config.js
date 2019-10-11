@@ -1,4 +1,5 @@
 const path = require("path");
+const nodeExternals = require("webpack-node-externals");
 
 module.exports = {
   module: {
@@ -29,5 +30,10 @@ module.exports = {
         }
       }
     ]
+  },
+  resolve: {
+    alias: {
+      components: "components/"
+    }
   }
 };
