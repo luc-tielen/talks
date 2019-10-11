@@ -32,6 +32,7 @@
   },
   "scripts": {
     "postinstall": "cd node_modules/prism-react-renderer && yarn && yarn build",
-    "present": "./bin/start_presentation.js"
+    "present": "./bin/start_presentation.js",
+    "deploy": "./bin/deploy.sh"
   }
 }
