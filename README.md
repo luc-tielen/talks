@@ -7,7 +7,6 @@ This page contains a collection of talks I have given in the past:
   - [introduction](https://luc-tielen.github.io/talks/haskell/introduction)
   - [polymorphism_and_typeclasses](https://luc-tielen.github.io/talks/haskell/polymorphism_and_typeclasses)
   - [semigroups_and_monoids](https://luc-tielen.github.io/talks/haskell/semigroups_and_monoids)
-  - [functors](https://luc-tielen.github.io/talks/haskell/functors)
   
 
 Source code for the talks can be found in this [repo](https://github.com/luc-tielen/talks).
