@@ -32,11 +32,11 @@ done
 
 echo "Preparing deploy..."
 git checkout gh-pages
-rm -rf $DIRS
+rm -rf "${DIRS[@]}"
 mv dist/* .
 
 echo "Deploying to github pages..."
-git add $DIRS
+git add "${DIRS[@]}"
 git commit -m 'Update talks'
 git push
 
