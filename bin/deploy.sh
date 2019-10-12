@@ -18,7 +18,7 @@ for DIR in "${DIRS[@]}"; do
   echo "Building presentation: $DIR..."
   yarn mdx-deck build --webpack webpack.config.js $DIR/presentation.mdx
   FILES=$(find dist/ -type f -depth 1)
-  mkdir dist/$DIR
+  mkdir -p dist/$DIR
   mv $FILES dist/$DIR > /dev/null || echo "Finished building: $DIR..."
 done
 
