@@ -57,7 +57,7 @@ function prepare_deploy() {
 
 function deploy() {
   echo "Deploying to github pages..."
-  git add "${DIRS[@]}"
+  git add "${DIRS[@]}" README.md
   git commit -m 'Update talks'
   git push
 }
