@@ -1,5 +1,6 @@
 import Title from "../../components/Title";
 import SVG from "../../components/SVG";
+import Image from "../../components/Image";
 import VennDiagram from "../../components/VennDiagram";
 import { components } from "mdx-deck-code-surfer"
 import { withCodeSurfer } from "mdx-deck-kabisa-theme"
@@ -223,7 +224,7 @@ instance Semigroup Span where
 
 ## Checking laws using PBT
 
-![](./images/pbt_semigroup.png)
+<Image src={require("./images/pbt_semigroup.png")}/>
 
 ---
 
@@ -444,7 +445,7 @@ getConfig = do
 
 ## Conclusion
 
-![Monoids, monoids everywhere](./images/monoids_everywhere.jpg)
+<Image src={require("./images/monoids_everywhere.jpg")}/>
 
 - Lots of opportunities for composing values
 - Easy to use
