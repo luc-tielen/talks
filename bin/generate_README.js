@@ -6,8 +6,8 @@ const writeFile = promisify(fs.writeFile);
 
 const BASE_URL = "https://luc-tielen.github.io/talks/";
 
-const getLinks = dirs => {
-  const categories = dirs.reduce((acc, dir) => {
+const groupTalks = dirs =>
+  dirs.reduce((acc, dir) => {
     const [category, ...rest] = dir.split("/");
     return {
       ...acc,
@@ -15,21 +15,26 @@ const getLinks = dirs => {
     };
   }, {});
 
-  return categories;
+const formatSingleTalk = (category, dir) => {
+  const location = dir === "" ? "" : `/${dir}`;
+  return `- [${category}${location}](${BASE_URL}${category}${location})\n`;
 };
 
-const generateREADME = categories =>
+const formatMultipleTalks = (category, dirs) =>
+  `- ${category}\n${dirs
+    .map(dir => `  - [${dir}](${BASE_URL}${category}/${dir})`)
+    .join("\n")}
+  `;
+
+const generateREADME = talks =>
   `This page contains a collection of talks I have given in the past:
 
-${Object.entries(categories)
+${Object.entries(talks)
     .map(
       ([category, values]) =>
         values.length === 1
-          ? `- [${category}](${BASE_URL}${category}/${values[0]})\n`
-          : `- ${category}\n${values
-              .map(dir => `  - [${dir}](${BASE_URL}${category}/${dir})`)
-              .join("\n")}
-  `
+          ? formatSingleTalk(category, values[0])
+          : formatMultipleTalks(category, values)
     )
     .join("")}
 
@@ -38,8 +43,8 @@ Source code for the talks can be found in this [repo](https://github.com/luc-tie
 
 const main = async () => {
   const dirs = process.argv.slice(2);
-  const links = getLinks(dirs);
-  const contents = generateREADME(links);
+  const talks = groupTalks(dirs);
+  const contents = generateREADME(talks);
   await writeFile("dist/README.md", contents);
 };
 
