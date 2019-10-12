@@ -81,7 +81,7 @@ class Functor (f :: Type -> Type) where
   (<$) :: a -> f b -> f a
   {-# MINIMAL fmap #-}
 
-(<$>) :: (a -> b) -> f a -> f b
+(<$>) :: Functor f => (a -> b) -> f a -> f b
 (<$>) = fmap
 
 
@@ -177,13 +177,13 @@ instance Functor IO where
 ## A different perspective
 
 ```haskell
-fmap :: (a -> b) -> f a -> f b
+fmap :: Functor f => (a -> b) -> f a -> f b
 
 -- because of currying & right associativity of functions:
-fmap :: (a -> b) -> (f a -> f b)
+fmap :: Functor f => (a -> b) -> (f a -> f b)
 ```
 
-&#x2192; fmap 'upgrades' function to transform entire functor type
+&#x2192; fmap *upgrades* function to transform entire functor type
 
 ---
 
