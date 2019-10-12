@@ -1,4 +1,5 @@
 import SVG from "../components/SVG"
+import Image from "../components/Image"
 import { components } from "mdx-deck-code-surfer"
 import { withCodeSurfer } from "mdx-deck-kabisa-theme"
 import { CodeSurfer } from "mdx-deck-code-surfer";
@@ -20,8 +21,7 @@ export const theme = withCodeSurfer(CodeSurfer)
 
 ## Introduction
 
-![](./images/real_life_OO.png)
-
+<Image src={require("./images/real_life_OO.png")}/>
 
 ```notes
 - literally first picture I came across when googling "OO programming reality"

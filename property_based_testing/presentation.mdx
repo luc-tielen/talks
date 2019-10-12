@@ -1,6 +1,6 @@
-import { Steps, Step } from "../components/Steps"
 import Split2 from "../layouts/Split2"
 import SVG from "../components/SVG"
+import Image from "../components/Image"
 import Markdown from "react-markdown"
 import { components } from "mdx-deck-code-surfer"
 import { withCodeSurfer } from "mdx-deck-kabisa-theme"
@@ -32,7 +32,7 @@ describe("my first unit test", () => {
 })
 ```
 
-![Running unit tests](./images/unit_tests.png)
+<Image src={require("./images/unit_tests.png")}/>
 
 ---
 
@@ -45,7 +45,7 @@ describe("my first unit test", () => {
 
 ## Property based testing
 
-![QuickCheck paper](./images/quickcheck_paper.png)
+<Image src={require("./images/quickcheck_paper.png")}/>
 
 - Describe behavior of code in terms of "properties"
 - Origin: Haskell (QuickCheck)
@@ -164,7 +164,7 @@ const fc = require("fast-check");
 fc.sample(fc.jsonObject(), 5);
 ```
 
-![Generators in the REPL](./images/generated_json.png)
+<Image src={require("./images/generated_json.png")}/>
 
 ```notes
 - fc.jsonObject = another builtin generator
@@ -194,7 +194,7 @@ describe("shrinking examples", () => {
 });
 ```
 
-![](./images/shrinking_example.png)
+<Image src={require("./images/shrinking_example.png")}/>
 
 ```notes
 - First example of failing property
@@ -214,11 +214,11 @@ describe("shrinking examples", () => {
 - &#x2192; previous test is 'minimal' example
 - Example: a = 125, a &lt; 100
 
-![](./images/shrinking_algorithm1.png)
+<Image src={require("./images/shrinking_algorithm1.png")}/>
 
-![](./images/shrinking_algorithm2.png)
+<Image src={require("./images/shrinking_algorithm2.png")}/>
 
-![](./images/shrinking_algorithm3.png)
+<Image src={require("./images/shrinking_algorithm3.png")}/>
 
 </Split2>
 

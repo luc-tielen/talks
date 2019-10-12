@@ -1,5 +1,6 @@
-
 import { Steps, Step } from "../components/Steps"
+import Image from "../components/Image"
+import SVG from "../components/SVG"
 import Split from "../layouts/Split"
 import Markdown from "react-markdown"
 import { Notes } from "mdx-deck"
@@ -35,15 +36,18 @@ export const theme = {
 ## Structure of a compiler
 
 <Steps>
-<Step>![Compiler structure](./images/compiler_structure.svg)</Step>
-<Step>![Compiler structure](./images/compiler_structure2.svg)</Step>
+  <SVG contents={require("./schematics/compiler_structure.dot")}
+        width="75vw"/>
+  <SVG contents={require("./schematics/compiler_structure2.dot")}
+        width="75vw"/>
 </Steps>
 
 ---
 
 ## Abstract Syntax Trees
 
-![Simple AST](./images/simple_ast.svg)
+<SVG contents={require("./schematics/simple_ast.dot")}
+     width="25vw"/>
 
 Expression: 1 + 2 * 3
 
@@ -56,12 +60,10 @@ This is now the level at which we will be focusing for the rest of the talk.
 ## AST transformations
 
 <Split>
-  <Markdown>
-    ![Before AST transform](./images/ast_transform1.svg)
-  </Markdown>
-  <Markdown>
-    ![After AST transform](./images/ast_transform2.svg)
-  </Markdown>
+  <SVG contents={require("./schematics/ast_transform1.dot")}
+       width="25vw"/>
+  <SVG contents={require("./schematics/ast_transform2.dot")}
+       width="25vw"/>
 </Split>
 
 <Notes>
@@ -83,7 +85,8 @@ Focus on: optimizing
 
 ### One-pass compiler (the "monolith")
 
-![Normal compiler](./images/normal_compiler.svg)
+<SVG contents={require("./schematics/normal_compiler.dot")}
+     width="10vw"/>
 
 - Optimizations all at once
 - Hard to maintain
@@ -92,7 +95,9 @@ Focus on: optimizing
 
 ### Micropass compiler
 
-![Micropass compiler](./images/micropass_compiler.svg)
+<SVG contents={require("./schematics/micropass_compiler.dot")}
+     width="75vw"/>
+
 - Smaller, composable optimizations
 - ± 5-10 transforms
 
@@ -100,7 +105,9 @@ Focus on: optimizing
 
 ### Nanopass compiler
 
-![Nanopass compiler](./images/nanopass_compiler.svg)
+<SVG contents={require("./schematics/nanopass_compiler.dot")}
+     width="75vw"/>
+
 - Very small, focused optimizations
 - 50+ transforms not uncommon
 - Easier to maintain, extend, ...
@@ -276,7 +283,7 @@ Focus on: optimizing
 
 ## Questions?
 
-![Lisp XKCD](./images/lisp.png)
+<Image src={require("./images/lisp.png")}/>
 
 ---
 

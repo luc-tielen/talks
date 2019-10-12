@@ -3,6 +3,8 @@
 
 This repo contains a collection of talks I have given.
 Each talk is located inside a separate folder, separating it from the rest.
+The talks can be viewed online [here](https://luc-tielen.github.io/talks).
+
 
 ## Getting started
 
@@ -12,3 +14,4 @@ Each talk is located inside a separate folder, separating it from the rest.
 
 `yarn present` will then look for a file `presentation.mdx` to start the presentation from
 inside the specified folder and start up a webserver.
+
