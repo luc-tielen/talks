@@ -43,6 +43,11 @@ function build_talks() {
   done
 }
 
+function build_readme() {
+  echo "Generating README.md..."
+  node ./bin/generate_README.js "${DIRS[@]}"
+}
+
 function prepare_deploy() {
   echo "Preparing deploy..."
   git checkout gh-pages
@@ -67,6 +72,7 @@ function restore_working_directory() {
 setup_node_modules
 setup_working_directory
 build_talks
+build_readme
 prepare_deploy
 deploy
 restore_working_directory
