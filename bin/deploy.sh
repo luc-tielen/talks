@@ -2,7 +2,15 @@
 
 set -e
 
-DIRS=(property_based_testing higher_order_functions)
+DIRS=(
+  ast_transforms
+  property_based_testing
+  higher_order_functions
+  haskell/introduction
+  haskell/polymorphism_and_typeclasses
+  haskell/semigroups_and_monoids
+  haskell/functors
+)
 
 # Hack for being able to do static builds with mdx-deck.
 FILE=node_modules/mdx-deck/lib/html.js
