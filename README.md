@@ -1,14 +1,13 @@
+This page contains a collection of talks I have given in the past:
 
-# Talks
+- [ast_transforms](https://luc-tielen.github.io/talks/ast_transforms)
+- [property_based_testing](https://luc-tielen.github.io/talks/property_based_testing)
+- [higher_order_functions](https://luc-tielen.github.io/talks/higher_order_functions)
+- haskell
+  - [introduction](https://luc-tielen.github.io/talks/haskell/introduction)
+  - [polymorphism_and_typeclasses](https://luc-tielen.github.io/talks/haskell/polymorphism_and_typeclasses)
+  - [semigroups_and_monoids](https://luc-tielen.github.io/talks/haskell/semigroups_and_monoids)
+  - [functors](https://luc-tielen.github.io/talks/haskell/functors)
+  
 
-This repo contains a collection of talks I have given.
-Each talk is located inside a separate folder, separating it from the rest.
-
-## Getting started
-
-1. yarn install
-2. yarn present PRESENTATION_FOLDER
-3. Open browser and go to http://localhost:8080
-
-`yarn present` will then look for a file `presentation.mdx` to start the presentation from
-inside the specified folder and start up a webserver.
+Source code for the talks can be found in this [repo](https://github.com/luc-tielen/talks).
