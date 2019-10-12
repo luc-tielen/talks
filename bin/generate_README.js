@@ -6,12 +6,32 @@ const writeFile = promisify(fs.writeFile);
 
 const BASE_URL = "https://luc-tielen.github.io/talks/";
 
-const getLinks = dirs => dirs.map(dir => `- [${dir}](${BASE_URL}${dir})`);
+const getLinks = dirs => {
+  const categories = dirs.reduce((acc, dir) => {
+    const [category, ...rest] = dir.split("/");
+    return {
+      ...acc,
+      [category]: (acc[category] || []).concat(rest.join("\n"))
+    };
+  }, {});
 
-const generateREADME = links =>
+  return categories;
+};
+
+const generateREADME = categories =>
   `This page contains a collection of talks I have given in the past:
 
-${links.join("\n")}
+${Object.entries(categories)
+    .map(
+      ([category, values]) =>
+        values.length === 1
+          ? `- [${category}](${BASE_URL}${category}/${values[0]})\n`
+          : `- ${category}\n${values
+              .map(dir => `  - [${dir}](${BASE_URL}${category}/${dir})`)
+              .join("\n")}
+  `
+    )
+    .join("")}
 
 Source code for the talks can be found in this [repo](https://github.com/luc-tielen/talks).
 `;
