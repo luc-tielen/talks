@@ -1,0 +1,514 @@
+import Title from "../../components/Title";
+import { Steps } from "../../components/Steps";
+import SVG from "../../components/SVG";
+import { components } from "mdx-deck-code-surfer"
+import { withCodeSurfer } from "mdx-deck-kabisa-theme"
+import { CodeSurfer } from "mdx-deck-code-surfer";
+export const theme = withCodeSurfer(CodeSurfer)
+
+
+<SVG contents={require("./images/haskell_logo.svg")} width="20%"/>
+<Title contents="Applicative Functors"/>
+
+```haskell
+just42 = (+) <$> Just 1 <*> Just 41
+```
+
+---
+
+## Table of contents
+
+- Introduction
+- Applicative Functors
+- Exercises
+
+---
+
+## Introduction
+
+- Last time: Functors
+- Today: Applicative (Functors)
+- Fun fact: concept comes from comp sci, not CT
+
+---
+
+## Introduction
+
+- Quick recap:
+
+```haskell
+fmap :: Functor f => (a -> b) -> (f a -> f b)
+```
+
+- map: *upgrades* function of 1 arg
+- What if we try mapping function with >1 args?
+
+```notes
+Reminder that every function is curried in Haskell
+```
+
+---
+
+## Introduction
+
+<Steps>
+
+```haskell
+type String = [Char]
+
+(++) :: [a] -> [a] -> [a]
+
+(<$>) :: Functor f => (a -> b) -> f a -> f b
+
+
+whatNow :: _  -- what type?
+whatNow = (++) <$> Just "abc"
+```
+
+```haskell
+type String = [Char]
+
+(++) :: [a] -> [a] -> [a]
+
+(<$>) :: Functor f => (a -> b) -> f a -> f b
+
+
+whatNow :: Maybe (String -> String)
+whatNow = (++) <$> Just "abc"
+```
+
+</Steps>
+
+---
+
+## Introduction
+
+```haskell
+whatNow :: Maybe (String -> String)
+```
+
+- fmap: types do not line up
+- Pattern match needed before applying function
+- &#x2192; new function needed
+
+```notes
+- Right now, we would need to pattern match on the Maybe before applying the function
+- It would be nice if we could keep applying a function of multiple args, 1 by 1, generically
+- However, with fmap this is not possible (types do not line up)
+- This requires a new function, provided by Applicative
+```
+
+---
+
+```haskell Applicative typeclass
+class Functor f => Applicative (f :: Type -> Type) where
+  pure :: a -> f a
+
+  (<*>) :: f (a -> b) -> f a -> f b
+
+  (*>) :: f a -> f b -> f b
+
+  (<*) :: f a -> f b -> f a
+
+  liftA2 :: (a -> b -> c) -> f a -> f b -> f c
+
+  {-# MINIMAL pure, ((<*>) | liftA2) #-}
+----
+1:12 > Applicative functor typeclass
+1:4,12 > Most used part
+1[2:4] > Applicative requires f to be a Functor
+2 > pure = generic "wrapping/boxing/inject" function
+4 > (<*>) = apply operator
+6,8 > (<*) and (*>): sequencing of operations
+10 > liftA2 = "similar" to fmap in signature
+```
+
+```notes
+- in other languages, pure is sometimes separated into it's own "typeclass"
+- <*>, *> and <* are all used for sequencing
+- liftA2 = f <$> arg1 <*> arg2
+```
+
+---
+
+```haskell Some example instances
+data Identity a = Identity a
+
+instance Applicative Identity where
+  pure = Identity
+
+  Identity f <*> Identity a = Identity $ f a
+
+
+data Maybe a = Just a | Nothing
+
+instance Applicative Maybe where
+  pure = Just
+
+  Just f <*> Just a = Just $ f a
+  _ <*> _ = Nothing
+
+
+data Either a b = Left a | Right b
+
+instance Applicative (Either a) where
+  pure = Right
+
+  Right f <*> Right a = Right $ f a
+  Left a <*> _ = Left a
+  _ <*> Left a = Left a
+
+
+-- provided as library: http://hackage.haskell.org/package/Validation
+data Validation e a = Failure e | Success a
+
+instance Semigroup e => Applicative (Validation e) where
+  pure = Success
+
+  Failure e1 <*> Failure e2 = Failure $ e1 <> e2
+  Failure e <*> _ = Failure e
+  _ <*> Failure e = Failure e
+  Success f <*> Success a = Success $ f a
+
+-- and many more instances (functions, parsers, IO, ...)
+-- hint: ":i Applicative" in REPL
+----
+1:6 > Identity: no-op effect
+9:15 > Maybe: chain expressions until first Nothing
+18:25 > Either: chain until first Left error value
+28:40 > Validation: keep chaining, combine errors
+```
+
+```notes
+This assumes functor instances have already been defined somewhere else.
+```
+
+---
+
+## Examples
+
+```haskell
+-- what does the following return?
+example1 :: Maybe Int
+example1 = pure 5
+-- vs:
+example2 :: Either a Int
+example2 = pure 5
+```
+
+```notes
+pure normally doesn't require type signature, inferred from the rest
+```
+
+---
+
+## Examples
+
+```haskell
+-- what do the following examples contain?
+example3 = Nothing <*> Nothing
+example4 = Nothing <*> Just 5
+example5 = Just (+ 1) <*> Nothing
+example6 = Just (+ 1) <*> Just 41
+
+example7 = (+) <$> Nothing <*> Just 41
+example8 = (+) <$> Just 41 <*> Nothing
+example9 = (+) <$> Just 1 <*> Just 41
+-- You could use liftA2 in last 3 examples also.
+```
+
+---
+
+## Applicative
+
+- allows composing/sequencing of expressions
+- depending on the type, can have certain *effects*
+- &#x2192; `f` represents an *effect context*
+
+```notes
+- Effects is a better term for side effects, since we actively take measures to control them
+- Effects can be pure/non-pure, depending on the type
+```
+
+```notes
+Best to go back and forth between examples and this for clarification
+```
+
+---
+
+```haskell Validation example
+newtype Age = Age Int
+
+newtype Name = Name String
+
+data Person = Person Name Age
+
+
+validateAge :: Int -> Maybe Age
+validateAge years
+  | years == 0 = Nothing
+  | otherwise = Just $ Age years
+
+validateName :: String -> Maybe Name
+validateName name
+  | length name == 0 = Nothing
+  | otherwise = Just $ Name name
+
+validatePerson :: String -> Int -> Maybe Person
+validatePerson name years =
+  Person <$> validateName name <*> validateAge age
+
+
+data PersonError = InvalidAge Int | InvalidName String
+
+validateAge2 :: Int -> Either PersonError Age
+validateAge2 years
+  | years == 0 = Left $ InvalidAge years
+  | otherwise = Right $ Age years
+
+validateName2 :: String -> Either PersonError Name
+validateName2 name
+  | years == 0 = Left $ InvalidName name
+  | otherwise = Right $ Name name
+
+validatePerson2 :: String -> Int -> Either PersonError Person
+validatePerson2 name years =
+  Person <$> validateName2 name <*> validateAge2 years
+----
+1:5 > Some data types
+8:11 > Validating age
+13:16 > Validating name
+18:20 > Combining validations
+8:20 > Validation using Maybe
+23 > An error data type
+25:28 > Validating age
+30:33 > Validating name
+35:37 > Combining validations
+23:37 > Validation using Either
+20,37 > Look at similarities
+```
+
+---
+
+## Examples in the ecosystem
+
+- [Validation](http://hackage.haskell.org/package/Validation)
+- [megaparsec](http://hackage.haskell.org/package/megaparsec)
+- [optparse-applicative](http://hackage.haskell.org/package/optparse-applicative)
+- [Haxl](http://hackage.haskell.org/package/haxl)
+- ...
+
+---
+
+## A different perspective
+
+```haskell
+(<*>) :: Applicative f => f (a -> b) -> f a -> f b
+```
+
+- Everything known 'statically' upfront
+- &#x2192; extra optimizations possible
+- Important difference with Monad
+
+```notes
+Difference will be explained more next time when we also have seen monads
+```
+
+---
+
+```haskell optparse-applicative example
+module Main ( main ) where
+
+import Options.Applicative
+import Data.List ( intercalate )
+import Data.Text ( Text )
+import qualified Data.Text as T
+
+
+type Message = Text
+data AddMode = All | Patch
+data PushMode = Normal | Force
+
+data GitAction
+  = Add [FilePath] AddMode
+  | Commit Message
+  | Push PushMode
+  -- rest is left as an exercise to the reader 😉
+
+
+parser :: Parser GitAction
+parser = hsubparser $ addCmd <> commitCmd <> pushCmd where
+  addCmd = command "add" $ info addParser addDesc
+  commitCmd = command "commit" $ info commitParser commitDesc
+  pushCmd = command "push" $ info pushParser pushDesc
+
+  addParser = Add <$> some (argument str addHelp)
+                  <*> flag All Patch patchHelp
+  commitParser = Commit <$> argument str commitHelp
+  pushParser = Push <$> flag Normal Force pushHelp
+
+  addDesc = fullDesc <> progDesc "Stages files before committing."
+  commitDesc = fullDesc <> progDesc "Commit a set of staged files."
+  pushDesc = fullDesc <> progDesc "Push files to repository."
+
+  addHelp = metavar "FILES"
+         <> help "FILES to stage"
+  patchHelp = long "patch"
+           <> short 'p'
+           <> help "Flag for adding patches"
+  commitHelp = metavar "MESSAGE"
+            <> help "Message to add to the commit message"
+  pushHelp = long "force"
+          <> short 'f'
+          <> help "Flag for force pushing"
+
+main :: IO ()
+main = customExecParser parserPrefs parserInfo >>= handleAction
+  where desc = fullDesc
+            <> progDesc "Git CLI interface, in Haskell"
+            <> briefDesc
+        parserPrefs = prefs $ showHelpOnError <> showHelpOnEmpty
+        parserInfo = info (parser <**> helper) desc
+
+handleAction :: GitAction -> IO ()
+handleAction x = case x of
+  Add files mode ->
+    case mode of
+      All -> do
+        putStrLn "Adding the following files:"
+        putStrLn $ intercalate "\\n" files
+      Patch -> do
+        putStrLn "Adding the following files interactively:"
+        putStrLn $ intercalate "\\n" files
+  Commit msg -> putStrLn $ "Making commit with message: " <> T.unpack msg
+  Push Normal -> putStrLn "Pushing to repo"
+  Push Force -> putStrLn "Force pushing to repo"
+----
+1:6 > Module definition + imports
+9:17 > Data types representing actions our program supports
+20:21 > Our parser can take 3 possible alternative paths
+22:24 > Definition of the sub commands
+26:29 > Using applicative notation to define the parsers
+31:34 > Providing information to the library so it knows how to render help message
+35:44 > Providing information to the library so it knows how to render subcommand help messages
+44:52 > Hook up parser to main
+54:66 > Actual handling of the actions
+```
+
+---
+
+```bash Usage in terminal
+$ gitinhaskell-exe
+Usage: gitinhaskell-exe COMMAND
+  Git CLI interface, in Haskell
+
+Available options:
+  -h,--help                Show this help text
+
+Available commands:
+  add                      Stages files before committing.
+  commit                   Commit a set of staged files.
+  push                     Push files to repository.
+
+
+$ gitinhaskell-exe add
+Usage: gitinhaskell-exe add FILES [-p|--patch]
+  Stages files before committing.
+
+Available options:
+  FILES                    FILES to stage
+  -p,--patch               Flag for adding patches
+
+
+$ gitinhaskell-exe -- add -p a b c
+Adding the following files interactively:
+a
+b
+c
+
+
+$ gitinhaskell-exe -- commit
+Usage: gitinhaskell-exe commit MESSAGE
+  Commit a set of staged files.
+
+Available options:
+  MESSAGE                  Message to add to the commit message
+
+
+$ gitinhaskell-exe commit "My message here"
+Making commit with message: My message here
+----
+1:11 > No args provided
+14:20 > Add provided with no args
+23:27 > Correct usage of args (with -p)
+30:36 > Incorrect usage of commit
+38:39 > Correct usage of commit
+```
+
+---
+
+```haskell sequenceA example
+files :: [FilePath]
+files = ["Foo.hs", "Bar.hs", "Baz.hs", "Quux.hs"]
+
+actions :: [IO Text]
+actions = map readFile files
+
+readAllAction :: IO [Text]
+readAllAction = sequenceA actions
+-- NOTE: sequenceA :: (Traversable t, Applicative f)
+--                 => t (f a) -> f (t a)
+
+main :: IO ()
+main = do
+  contents <- readAllAction
+  _  -- do stuff with [Text]..
+
+----
+1:2 > Some input files
+4:5 > Processing of files
+7:10 > sequenceA can "flip" layers, generically
+12:16 > Usage
+```
+
+```notes
+Or just:
+
+main = do
+  contents <- traverse readFile files
+  _ -- ...
+```
+
+---
+
+## Conclusion
+
+- Powerful abstraction for composing expressions
+- Looks very similar to normal function application
+- Allows abstracting over _effects_
+
+
+---
+
+## Next time
+
+- Monads
+
+---
+
+## Links
+
+- [Control.Applicative](http://hackage.haskell.org/package/base-4.12.0.0/docs/Control-Applicative.html)
+- [haskell wiki](https://en.wikibooks.org/wiki/Haskell/Applicative_functors)
+- [Haxl talk](https://www.youtube.com/watch?v=bvgUTS0pX1k)
+
+---
+
+## Extra: Applicative laws
+
+1. Functor laws must hold
+2. `identity`: pure id <\*> v = v
+3. `homomorphism`: pure f <\*> pure x = pure (f x)
+4. `interchange`: u <\*> pure y = pure ($ y) <\*> u
+5. `composition`: pure (.) <\*> u <\*> v <\*> w = u <\*> (v <\*> w)
+
