@@ -1,12 +1,13 @@
 This page contains a collection of talks I have given in the past:
 
-- [ast_transforms](https://luc-tielen.github.io/talks/ast_transforms)
-- [property_based_testing](https://luc-tielen.github.io/talks/property_based_testing)
-- [higher_order_functions](https://luc-tielen.github.io/talks/higher_order_functions)
+- [ast transforms](https://luc-tielen.github.io/talks/ast_transforms)
+- [property based_testing](https://luc-tielen.github.io/talks/property_based_testing)
+- [higher order_functions](https://luc-tielen.github.io/talks/higher_order_functions)
 - haskell
   - [introduction](https://luc-tielen.github.io/talks/haskell/introduction)
-  - [polymorphism_and_typeclasses](https://luc-tielen.github.io/talks/haskell/polymorphism_and_typeclasses)
-  - [semigroups_and_monoids](https://luc-tielen.github.io/talks/haskell/semigroups_and_monoids)
+  - [polymorphism and_typeclasses](https://luc-tielen.github.io/talks/haskell/polymorphism_and_typeclasses)
+  - [semigroups and_monoids](https://luc-tielen.github.io/talks/haskell/semigroups_and_monoids)
+  - [functors](https://luc-tielen.github.io/talks/haskell/functors)
   
 
 Source code for the talks can be found in this [repo](https://github.com/luc-tielen/talks).
