@@ -63,7 +63,7 @@ for (uint32_t i = 0; i < 100; ++i) {
 ```haskell A different approach
 listMap :: (a -> b) -> [a] -> [b]
 listMap f [] = []
-listMap f (x:xs) = f x : map f xs
+listMap f (x:xs) = f x : listMap f xs
 
 
 data Tree a = Leaf a
@@ -178,7 +178,7 @@ instance Functor ((->) a) where
 instance Functor IO where
   fmap f action = do
     result <- action
-    pure $ f action
+    pure $ f result
 
 -- and many more (hint: ':i Functor' in REPL)
 ----
@@ -343,6 +343,7 @@ data Expr a
 
 - map is incredibly useful for transforming data
 - Haskell &#x2192; works on many data types
+- Forms the basis for Applicative & Monad
 
 ---
 
@@ -350,6 +351,7 @@ data Expr a
 
 - Bifunctors
 - Contravariant functors
+- Profunctors
 
 ---
 
