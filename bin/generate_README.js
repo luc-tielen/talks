@@ -17,12 +17,17 @@ const groupTalks = dirs =>
 
 const formatSingleTalk = (category, dir) => {
   const location = dir === "" ? "" : `/${dir}`;
-  return `- [${category}${location}](${BASE_URL}${category}${location})\n`;
+  return `- [${(category + location).replace(
+    /[/_-]/,
+    " "
+  )}](${BASE_URL}${category}${location})\n`;
 };
 
 const formatMultipleTalks = (category, dirs) =>
   `- ${category}\n${dirs
-    .map(dir => `  - [${dir}](${BASE_URL}${category}/${dir})`)
+    .map(
+      dir => `  - [${dir.replace(/[/_-]/, " ")}](${BASE_URL}${category}/${dir})`
+    )
     .join("\n")}
   `;
 

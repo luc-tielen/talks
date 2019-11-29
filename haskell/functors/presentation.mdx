@@ -36,10 +36,35 @@ just42 = (+ 1) <$> Just 41
 
 ---
 
-```haskell Introduction
+```cpp Introduction
+Item data[100];
+
+for (uint32_t i = 0; i < 100; ++i) {
+  Item& item = data[i];
+
+  doStuff(item);
+  doMoreStuff(item);
+}
+----
+* > How I learned to program back in the day
+```
+
+---
+
+## For loops have problems
+
+- Repetition
+- Not composable
+- Imperative by nature
+- &#x2192; need a better solution
+
+---
+
+```haskell A different approach
 listMap :: (a -> b) -> [a] -> [b]
 listMap f [] = []
-listMap f (x:xs) = f x : map f xs
+listMap f (x:xs) = f x : listMap f xs
+
 
 data Tree a = Leaf a
             | Branch (Tree a) (Tree a)
@@ -49,20 +74,20 @@ treeMap f (Leaf a) = Leaf $ f a
 treeMap f (Branch l r) =
   Branch (treeMap f l) (treeMap f r)
 
+
 maybeMap :: (a -> b) -> Maybe a -> Maybe b
 maybeMap f Nothing = Nothing
 maybeMap f (Just a) = Just (f a)
 ----
-1:3 > Lists
-5:11 > Trees
-13:15 > Maybe
+1:3 > Transforming Lists
+6:12 > Transforming Trees
+15:17 > Transforming Maybes
 ```
 
 ---
 
-## Introduction
+## Let's take a step back
 
-- Let's take a step back
 - Can we generalize this pattern?
 
 ```haskell
@@ -153,7 +178,7 @@ instance Functor ((->) a) where
 instance Functor IO where
   fmap f action = do
     result <- action
-    pure $ f action
+    pure $ f result
 
 -- and many more (hint: ':i Functor' in REPL)
 ----
@@ -213,7 +238,7 @@ import Data.Aeson ( Value )
 
 newtype Name = Name Text
 newtype Age = Age Int
-data Dog Name Age
+data Dog = Dog Name Age
 
 newtype Sound = Sound Text
 
@@ -318,6 +343,7 @@ data Expr a
 
 - map is incredibly useful for transforming data
 - Haskell &#x2192; works on many data types
+- Forms the basis for Applicative & Monad
 
 ---
 
@@ -325,6 +351,7 @@ data Expr a
 
 - Bifunctors
 - Contravariant functors
+- Profunctors
 
 ---
 

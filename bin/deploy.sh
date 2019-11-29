@@ -9,6 +9,7 @@ DIRS=(
   haskell/introduction
   haskell/polymorphism_and_typeclasses
   haskell/semigroups_and_monoids
+  haskell/functors
 )
 
 function setup_node_modules() {
