@@ -8,6 +8,7 @@ This page contains a collection of talks I have given in the past:
   - [polymorphism and_typeclasses](https://luc-tielen.github.io/talks/haskell/polymorphism_and_typeclasses)
   - [semigroups and_monoids](https://luc-tielen.github.io/talks/haskell/semigroups_and_monoids)
   - [functors](https://luc-tielen.github.io/talks/haskell/functors)
+  - [applicative functors](https://luc-tielen.github.io/talks/haskell/applicative_functors)
   
 
 Source code for the talks can be found in this [repo](https://github.com/luc-tielen/talks).
