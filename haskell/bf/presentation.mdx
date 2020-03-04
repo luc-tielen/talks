@@ -1,0 +1,50 @@
+import Title from "../../components/Title";
+import SVG from "../../components/SVG";
+import { components } from "mdx-deck-code-surfer"
+import { withCodeSurfer } from "mdx-deck-kabisa-theme"
+import { CodeSurfer } from "mdx-deck-code-surfer";
+export const theme = withCodeSurfer(CodeSurfer)
+
+
+<SVG contents={require("./images/haskell_logo.svg")} width="20%"/>
+<Title contents="BF Interpreter"/>
+
+---
+
+## Table of contents
+
+- Introduction
+- Mob programming
+- Questions
+
+---
+
+## Introduction
+
+- Today: different format than usual
+- Challenge: build a Brainfuck interpreter
+- Concepts from previous SIG FPs will be used
+- 1 or 2 sessions, based on amount of questions
+
+---
+
+## Mob programming
+
+- [Brainfuck (on Wikipedia)](https://en.wikipedia.org/wiki/Brainfuck)
+
+```bf
+Evaluate the following piece of code:
+
+++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]
+>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.
+>>+.>++.
+```
+
+---
+
+## Next time
+
+- GADTs?
+- Free monads?
+- Anatomy of a Haskell library?
+- Recursion schemes?
