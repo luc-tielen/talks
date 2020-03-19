@@ -14,6 +14,7 @@ DIRS=(
   haskell/monads
   haskell/bf
   haskell/gadts
+  haskell/free
 )
 
 function setup_node_modules() {
