@@ -1,0 +1,454 @@
+import Title from "../../components/Title";
+import SVG from "../../components/SVG";
+import { components } from "mdx-deck-code-surfer"
+import { withCodeSurfer } from "mdx-deck-kabisa-theme"
+import { CodeSurfer } from "mdx-deck-code-surfer";
+export const theme = withCodeSurfer(CodeSurfer)
+
+
+<SVG contents={require("./images/haskell_logo.svg")} width="20%"/>
+<Title contents="Free monads"/>
+
+```haskell
+echo :: Free InteractionF ()
+echo = do
+  input <- readInput
+  writeOutput input
+```
+
+---
+
+## Table of contents
+
+- Introduction
+- Usecases & examples
+- Questions
+
+---
+
+## Quick recap: monads
+
+```haskell
+class Applicative m => Monad m where
+  (>>=) :: m a -> (a -> m b) -> m b
+  (>>) :: m a -> m b -> m b
+  return :: a -> m a
+  {-# MINIMAL (>>=) #-}
+```
+
+- &#x003e;&#x003e;= : sequencing of actions
+- &#x003e;&#x003e; : discards first result
+- return : embeds value in a monadic context
+
+---
+
+## Free
+
+- Originates from category theory
+- Absolute minimum needed for concept to apply
+- "If X applies, you get Y for free"
+
+```notes
+Free applies to other concepts than monads, e.g. list is the free monoid.
+Lists always have a neutral element (the element list) and can always be combined to form a bigger list.
+```
+
+---
+
+```haskell Free monad
+data Free f a
+  = Pure a
+  | Free (f (Free f a))
+
+instance Functor f => Functor (Free f) where
+  fmap f (Pure a) = Pure (f a)
+  fmap f (Free fa) = Free (fmap (fmap f) fa)
+
+instance Functor f => Applicative (Free f) where
+  pure = Pure
+  Pure f <*> Pure a = Pure (f a)
+  Pure f <*> Free fa = fmap f (Free fa)
+  Free fa <*> m = Free (fmap (<*> m) fa)
+
+instance Functor f => Monad (Free f) where
+  Pure a >>= f = f a
+  Free fa >>= f = Free (fmap (>>= f) fa)
+----
+1:3 > The Free (monad) datastructure
+1[6], 2[5], 3[13] > 'a' is type var of a pure computation
+1[4], 3[6, 11] > 'f' is type var of our instructions (impure computations)
+5:7 > Free is a Functor
+9:13 > Free is an Applicative
+15:17 > Free is a Monad
+```
+
+```notes
+Technically you will never need to know this part, you only use fmap, <*>, pure and >>= as a user.
+
+Data type: contains a pure part (no effects), and an impure part (here called Free).
+This is a good (but hard) exercise for hole driven development.
+Hint: name a normal value 'a', and a value wrapped in a functor layer 'fa' for consistency
+(error messages will be more inline as well).
+Hint: If you need to fill a hole with "f a", fmap is needed most of the time.
+```
+
+---
+
+##
+
+```haskell Some helper functions
+{-# LANGUAGE RankNTypes #-}
+
+liftF :: Functor f => f a -> Free f a
+liftF action = Free (fmap pure action)
+
+foldFree :: (Functor f, Monad m)
+         => (forall x. f x -> m x)
+         -> Free f a -> m a
+foldFree _ (Pure a) = pure a
+foldFree f (Free m) = do
+  a <- f m
+  foldFree f a
+----
+3:4 > Embeds an action (a functor) inside Free
+1, 6:12 > Fold over a Free datastructure (evaluate into some monad)
+```
+
+```notes
+Also here you technically don't need to know the internals, they are provided in a library.
+RankNTypes is needed for foldFree to typecheck (with the explicit forall).
+Basically it lets foldFree choose the type of x; functions using foldFree can't choose x.
+It would go too far to explain this in detail here, but there are already plenty of other resources online.
+```
+
+---
+
+```haskell Using Free
+data InteractionF next
+  = WriteOutput Text next
+  | ReadInput (Text -> next)
+  deriving Functor
+
+type Interaction = Free InteractionF
+
+
+readInput :: Interaction Text
+readInput = liftF $ ReadInput id
+
+writeOutput :: Text -> Interaction ()
+writeOutput x = liftF $ WriteOutput x ()
+
+
+echo :: Interaction ()
+echo = do
+  input <- readInput
+  writeOutput input
+
+loop :: Interaction a
+loop = forever echo
+
+
+evalInteraction :: Interaction a -> IO a
+evalInteraction m = case m of
+  Pure a -> pure a
+  Free (ReadInput f) -> do
+    input <- getLine
+    let result = f input
+    evalInteraction result
+  Free (WriteOutput x next) -> do
+    putStrLn x
+    evalInteraction next
+
+evalInteraction' :: Interaction a -> IO a
+evalInteraction' = foldFree go where
+  go (ReadInput next) = next <$> getLine
+  go (WriteOutput x next) = do
+    putStrLn x
+    pure next
+
+main :: IO ()
+main = evalInteraction loop
+----
+1:4 > Define a functor for our actions
+1[4] > 'next': type var for rest of the program (continuation)
+2[5] > Action with 1 or more arguments: add to constructor
+2[7] > Add continuation as last argument
+3[5:11] > Action that returns value: add function to constructor
+6 > Type synonym for ease of use
+9:13 > Lift actions into Free
+16:22 > Write business logic
+25:34 > Interpreter for console IO
+36:41 > Alternative interpreter
+43:44 > Evaluating the program
+```
+
+```notes
+The trailing "F" on the data type is a common thing you see returning,
+indicating it is a functor (and since we use the name without F for the type synonym).
+The instructions are also often called an algebra (a set of actions that can be performed).
+It's also important to choose a minimal set of operations that are orthogonal (no overlap) to each other.
+
+liftF boilerplate could be made more succinct using TemplateHaskell.
+```
+
+---
+
+## Domain / business logic
+
+```haskell
+echo :: Interaction ()
+echo = do
+  input <- readInput
+  writeOutput input
+```
+
+- = specification of program (as an EDSL)
+- Code = data &#x2192; can be manipulated
+- Multiple interpretations possible
+
+
+```notes
+EDSL = Embedded Domain Specific Language.
+
+In a way, Free very closely resembles an AST of a program.
+
+We can inspect the structure and optimize where possible.
+
+Some example interpretations can be:
+- console
+- sockets
+- testing code
+- logging
+- ...
+```
+
+---
+
+```haskell Composing instructions
+-- Defined in Data.Functor.Sum
+data Sum f g a = InL (f a) | InR (g a)
+  deriving Functor
+
+
+type Name = Text
+type Password = Text
+data LoginResult = AccessGranted | InvalidLogin
+  deriving Eq
+
+data UserServiceF next = Login Name Password (LoginResult -> next)
+                       -- | register, logout, ...
+  deriving Functor
+
+type UserInteractionF = Sum InteractionF UserServiceF
+type UserInteraction = Free UserInteractionF
+
+
+readInput :: UserInteraction Text
+readInput = liftF $ InL (ReadInput id)
+
+writeOutput :: Text -> UserInteraction ()
+writeOutput x = liftF $ InL (WriteOutput x ())
+
+login :: Name -> Password -> UserInteraction LoginResult
+login name pw = liftF $ InR (Login name pw id)
+
+
+prompt :: Text -> UserInteraction Text
+prompt msg = do
+  writeOutput msg
+  readInput
+
+logUserIn :: UserInteraction ()
+logUserIn = do
+  name <- prompt "Enter your username:"
+  pw <- prompt "Enter your password:"
+  result <- login name pw
+  if result == AccessGranted
+    then writeOutput $ "Hello, " <> name <> "."
+    else writeOutput "Access denied."
+----
+1:3 > A sum of functors forms another functor
+6:9 > Some helper data types for our domain
+11:13 > A new data type for actions involving users
+15:16 > Composing 2 functors
+18:26 > Functions for each of the instructions
+20[9], 23[11], 26[13] > InL / InR glue needed for Sum
+29:41 > Domain logic
+```
+
+```notes
+Since Sum of 2 functors is again a functor, you can keep composing with other instructions using nested Sums of functors.
+```
+
+---
+
+```haskell Composing interpreters
+evalInteraction :: InteractionF a -> IO a
+evalInteraction (ReadInput next) = next <$> getLine
+evalInteraction (WriteOutput x next) = do
+  putStrLn x
+  pure next
+
+evalUserService :: UserServiceF a -> IO a
+evalUserService (Login name pw next) = do
+  loginResult <- actualLogin name pw
+  pure $ next loginResult
+  where actualLogin _ _ = pure AccessGranted
+  -- interpret other actions...
+
+evalUserInteraction :: UserInteraction a -> IO a
+evalUserInteraction = foldFree go where
+  go (InL interaction) = evalInteraction interaction
+  go (InR userAction) = evalUserService userAction
+
+main :: IO ()
+main = evalUserInteraction logUserIn
+----
+1:5 > Interpreter for InteractionF
+7:12 > Interpreter for UserServiceF
+14:17 > Combining both interpreters
+19:20 > Call from main
+```
+
+```notes
+Tip: Hole driven development is your friend here!
+```
+
+---
+
+```haskell Decomposing interpreters
+-- Let's decompose an interaction into logging and console actions
+
+data LogF a = Log Text a
+  deriving Functor
+
+logMsg :: Text -> Log ()
+logMsg txt = liftF $ Log txt ()
+
+
+data ConsoleF a = ReadLine (Text -> a)
+                | WriteLine Text a
+                deriving Functor
+
+readLine :: Free ConsoleF Text
+readLine = liftF $ ReadLine id
+
+writeLine :: Text -> Free ConsoleF ()
+writeLine x = liftF $ WriteLine x ()
+
+
+-- Provided by library
+hoistFree :: Functor g => (forall x. f x -> g x) -> Free f a -> Free g a
+hoistFree f m = case m of
+  Pure a -> pure a
+  Free fa -> Free $ hoistFree f <$> f fa
+
+interpretLog :: InteractionF a -> Free LogF ()
+interpretLog = go where
+  go (ReadInput _) = logMsg "Reading input"
+  go (WriteOutput x _) = logMsg $ "Writing output: " <> x
+
+interpretConsole :: InteractionF a -> Free ConsoleF a
+interpretConsole (ReadInput next) = next <$> readLine
+interpretConsole (WriteOutput x next) = do
+  writeLine x
+  pure next
+
+reinterpret :: InteractionF a -> Free (Sum LogF ConsoleF) a
+reinterpret m = do
+  hoistFree InL (interpretLog m)
+  hoistFree InR (interpretConsole m)
+
+runProgram :: Free (Sum LogF ConsoleF) a -> IO a
+runProgram = foldFree go where
+  go (InL m) = evalLogIO m
+  go (InR m) = evalConsoleIO m
+  evalLogIO (Log x next) = do
+    putStrLn x  -- or syslog / file / ...
+    pure next
+  evalConsoleIO m = case m of
+    ReadLine next -> next <$> getLine
+    WriteLine x next -> do
+      putStrLn x
+      pure next
+
+main :: IO ()
+main = runProgram $ foldFree reinterpret echo
+----
+1 > The plan
+3:7 > Add a logging instruction
+10:18 > And console instructions
+21:25 > Helper function: transforms functor inside Free
+27:30 > Interpret interaction as log action
+32:36 > Interpret interaction as console action
+38:41 >  Reinterpret into simpler instruction sets
+43:54 > Interpret into IO actions
+56:57 > Evaluating the program
+```
+
+```notes
+Hole driven development is your friend here as well.
+
+This is basically the other way around from previous slide.
+This can be really nice to add logging to every instruction in a program,
+without having to explicitly litter the domain logic code with log statements.
+
+NOTE: reinterpret does not return IO, but Free again (with other functors inside)
+```
+
+---
+
+## Summary of approach
+
+1. Create instruction data types
+2. Add functions for lifting instructions into Free
+2. Build spec of program using Free
+3. (Re-)interpret into another monad
+
+---
+
+## A note on performance
+
+- Slower than MTL
+  - only Free itself
+  - interpreters still fast
+- ~ speed of Python
+- Other implementations try to improve this
+
+---
+
+## Going even further
+
+- Freer monads (as in, more free than free)
+- Better for when composing many effects
+- Better perf
+- Part 2 of this talk?
+
+---
+
+## Conclusion
+
+- Write logic once, interpet many times
+- Great for business / glue / domain logic
+- Very composable
+- Clean separation of concerns
+- Easy testing (another interpreter!)
+- Turns every app into a compiler
+
+---
+
+## Links
+
+- [free](https://hackage.haskell.org/package/free)
+- [What does free buy us?](https://www.parsonsmatt.org/2017/09/22/what_does_free_buy_us.html)
+- [Modern FP](http://degoes.net/articles/modern-fp)
+- [Modern FP, pt2](http://degoes.net/articles/modern-fp-part-2)
+
+---
+
+## Next time
+
+- Freer monads?
+- Anatomy of a Haskell library?
+- Recursion schemes?
+
