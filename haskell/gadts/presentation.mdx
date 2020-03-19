@@ -1,0 +1,293 @@
+import Title from "../../components/Title";
+import SVG from "../../components/SVG";
+import { components } from "mdx-deck-code-surfer"
+import { withCodeSurfer } from "mdx-deck-kabisa-theme"
+import { CodeSurfer } from "mdx-deck-code-surfer";
+export const theme = withCodeSurfer(CodeSurfer)
+
+
+<SVG contents={require("./images/haskell_logo.svg")} width="20%"/>
+<Title contents="GADTs"/>
+
+```haskell
+{-# LANGUAGE GADTs #-}
+
+data Empty
+data NonEmpty
+
+data List n a where
+  Nil :: List Empty a
+  Cons :: a -> List n a -> List NonEmpty a
+```
+
+---
+
+## Table of contents
+
+- Introduction
+- Usecases/examples
+- Questions
+
+---
+
+## So.. "GADTs"? 🤔
+
+- = `Generalized` algebraic data types
+- Powerful Haskell extension (10+ years old)
+- Constructors: richer types allowed
+
+---
+
+## New syntax (1)
+
+```haskell
+data Dog = Dog Name Age
+
+-- vs.
+
+data Dog where
+  Dog :: Name -> Age -> Dog
+```
+
+- Both declarations are equivalent
+- GADT syntax: explicit type signatures
+
+---
+
+## New syntax (2)
+
+```haskell
+data Maybe a = Nothing
+             | Just a
+
+-- vs.
+
+data Maybe a where
+  Nothing :: Maybe a
+  Just :: a -> Maybe a
+```
+
+- Type variables are also allowed
+
+---
+
+## New syntax (3)
+
+```haskell
+data Either a b = Left a | Right b
+
+-- vs.
+
+data Either a b where
+  Left :: a -> Either a b
+  Right :: b -> Either a b
+```
+
+---
+
+```haskell Revisiting lists
+{-# LANGUAGE GADTs #-}
+
+data Empty
+data NonEmpty
+
+data List n a where
+  Nil :: List Empty a
+  Cons :: a -> List n a -> List NonEmpty a
+
+head :: List NonEmpty a -> a
+head (Cons a _) = a
+----
+1 > Required language pragma
+3:4 > Empty data types for carrying info on type level
+6:8 > List in GADT form
+10:11 > Example function using lists
+```
+
+```notes
+Actual length instead of Empty/NonEmpty can be stored as well
+```
+
+---
+
+## Zooming in on the head function
+
+```haskell
+head :: List NonEmpty a -> a
+head (Cons a _) = a
+```
+
+- Compiler can now check for non-empty lists `everywhere`
+- &#x21b3; = compile time proof
+- Pattern match needed for Nil?
+- What if we wanted first 2 elements?
+
+```notes
+- First question = trick question, it's not possible due to type mismatch (Empty vs NonEmpty)
+- This function is total (defined for every possible input of that type).
+- Last point: needs extra information on type level (actual size of the list)
+```
+
+---
+
+## Example: check if list empty
+
+```haskell
+isEmpty :: List n a -> Bool
+isEmpty Nil = True
+isEmpty (Cons _ _) = False
+```
+
+- Not interested in the "n" parameter now
+
+```notes
+In fact, doesn't compile without this type signature due to how inference works for GADTs.
+(n would be inferred to be Empty because of first pattern match)
+```
+
+---
+
+```haskell Example: Heterogeneous lists
+{-# LANGUAGE DataKinds, TypeOperators #-}
+
+data HList as where
+  End :: HList '[]
+  (:::) :: a -> HList as -> HList (a ': as)
+
+infixr 5 :::
+
+myList :: HList '[Bool, Int]
+myList = True ::: 42 ::: End
+----
+1 > Extra extensions needed
+3:5 > Definition of HList
+7 > Make ::: right associative (same as : for lists)
+9:10 > Usage
+```
+
+```notes
+- DataKinds: Use data constructors on type level, results in a kind different than Type / *.
+- TypeOperators: Allows using operators on type level
+```
+
+---
+
+```haskell Example: Evaluating expressions
+data Expr = Number Int
+          | Sum Expr Expr
+          | Boolean Bool
+          | And Expr Expr
+
+
+eval :: Expr -> Either Int Bool
+eval (Number n) = Left n
+eval (Boolean b) = Right b
+eval (Sum e1 e2) = case (eval e1, eval e2) of
+  (Left n1, Left n2) -> n1 + n2
+  _ -> _  -- ???
+eval (And e1 e2) = case (eval e1, eval e2) of
+  (Right b1, Right b2) -> b1 && b2
+  _ -> _  -- ???
+
+
+data Expr a where
+  Number :: Int -> Expr Int
+  Boolean :: Bool -> Expr Bool
+  Sum :: Expr Int -> Expr Int -> Expr Int
+  And :: Expr Bool -> Expr Bool -> Expr Bool
+
+
+eval :: Expr a -> a
+eval (Number n) = n
+eval (Boolean b) = b
+eval (Sum e1 e2) = eval n1 + eval n2
+eval (And e1 e2) = eval n1 && eval n2
+----
+1:2 > A data type for expressions (with integers)
+1:4 > Adding Bools: allows invalid Exprs to be created
+7:15 > Naive eval function
+18:22 > GADT approach: Store result type on type level
+24:29 > eval: trivial to implement, more type safe
+```
+
+---
+
+```haskell Example: type checking / inference
+data Expr = Number Int
+          | Sum Expr Expr
+          | Boolean Bool
+          | And Expr Expr
+
+data TExpr a where
+  TNumber :: Int -> TExpr Int
+  TBoolean :: Bool -> TExpr Bool
+  TSum :: TExpr Int -> TExpr Int -> TExpr Int
+  TAnd :: TExpr Bool -> TExpr Bool -> TExpr Bool
+
+data Tag ty where
+  TagBool :: Tag Bool
+  TagInt :: Tag Int
+
+data TypedExpr where
+  TypedExpr :: Tag ty -> TExpr ty -> TypedExpr
+
+data TypeError = TypeMismatch
+
+-- Can also be seen as a "parse"-like function for input data
+infer :: Expr -> Either TypeError TypedExpr
+infer (Number n) = pure $ TypedExpr TagInt (TNumber n)
+infer (Boolean b) = pure $ TypedExpr TagBool (TBool b)
+infer (Sum e1 e2) = do
+  TypedExpr t1 e1' <- infer e1
+  TypedExpr t2 e2' <- infer e2
+  case (t1, t2) of
+    (TagInt, TagInt) -> pure $ TypedExpr TagInt (TSum e1' e2')
+    _ -> throwError TypeMismatch
+infer (And e1 e2) = do
+  TypedExpr t1 e1' <- infer e1
+  TypedExpr t2 e2' <- infer e2
+  case (t1, t2) of
+    (TagBool, TagBool) -> pure $ TypedExpr TagBool (TAnd e1' e2')
+    _ -> throwError TypeMismatch
+----
+1:10 > Same datatypes as before
+12:14 > Helper type with values for all possible types in TExpr
+16:17 > Wrapper GADT for bundling a Tag and TExpr
+19 > A data type for all possible type errors
+21:22 > Type of "infer"
+23:24 > Inferring Numbers and Booleans
+25:30 > Inferring Sum
+28, 29[1:6] > Pattern matching brings extra information in scope
+31:36 > Inferring And
+```
+
+---
+
+## Conclusion
+
+- Expressivity greatly increased
+- Compile time proofs
+- Useful for making impossible states impossible
+- Comes at a cost
+  - Gradual introduction
+  - Use in most critical parts
+
+---
+
+## Links
+
+- [GHC user manual on GADTs](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html#extension-GADTs)
+- [Haskell wiki](https://en.wikibooks.org/wiki/Haskell/GADT)
+- [LambdaConf talk (R. Eisenberg)](https://www.youtube.com/watch?v=6snteFntvjM)
+- [What I wish I knew when I was learning Haskell: GADTs](http://dev.stephendiehl.com/hask/#gadts)
+- [Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/)
+- [Dependent types in Haskell (S. Weirich)](https://www.youtube.com/watch?v=wNa3MMbhwS4)
+
+---
+
+## Next time
+
+- Free monads?
+- Anatomy of a Haskell library?
+- Recursion schemes?
+
