@@ -18,7 +18,7 @@ const groupTalks = dirs =>
 const formatSingleTalk = (category, dir) => {
   const location = dir === "" ? "" : `/${dir}`;
   return `- [${(category + location).replace(
-    /[/_-]/,
+    /[/_-]/g,
     " "
   )}](${BASE_URL}${category}${location})\n`;
 };
