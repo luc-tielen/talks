@@ -12,6 +12,7 @@ DIRS=(
   haskell/functors
   haskell/applicative_functors
   haskell/monads
+  haskell/bf
 )
 
 function setup_node_modules() {
