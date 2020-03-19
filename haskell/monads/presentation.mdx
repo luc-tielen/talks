@@ -1,0 +1,506 @@
+import Title from "../../components/Title";
+import { Steps, Step } from "../../components/Steps";
+import SVG from "../../components/SVG";
+import { components } from "mdx-deck-code-surfer"
+import { withCodeSurfer } from "mdx-deck-kabisa-theme"
+import { CodeSurfer } from "mdx-deck-code-surfer";
+export const theme = withCodeSurfer(CodeSurfer)
+
+
+<SVG contents={require("./images/haskell_logo.svg")} width="20%"/>
+<Title contents="Monads"/>
+
+```haskell
+main :: IO ()
+main = print "Hello world!"
+```
+
+---
+
+## Table of contents
+
+- Introduction
+- Monads
+
+---
+
+## Introduction
+
+- 2nd last time: Functors
+- Last time: Applicative Functors
+- Today: Monads
+
+---
+
+## Quick recap: Functors
+
+```haskell
+fmap :: Functor f => (a -> b) -> (f a -> f b)
+```
+
+- map: *upgrades* function of 1 arg
+
+---
+
+## Quick recap: Applicative functors
+
+```haskell
+pure :: Applicative f => a -> f a
+(<*>) :: Applicative f => f (a -> b) -> f a -> f b
+```
+
+- pure: *wraps* argument in a context
+- (<\*>): Composes expressions in a context
+
+---
+
+```haskell Another common pattern in code
+data MyType = ...
+
+doStuff :: MyType -> Maybe MyType
+
+maybeDoStuff :: Maybe MyType -> Maybe MyType
+maybeDoStuff m = case m of
+  Nothing -> Nothing
+  Just value ->
+    case doStuff value of  -- some more code
+      Nothing -> Nothing
+      Just value2 -> Just value2
+----
+* > Example with Maybe
+1,3 > Code defined elsewhere
+6[7:11] > First do a pattern match
+7 > Abort on Nothing
+8:11 > Do stuff with value inside Maybe
+11 > Can have many nested cases (with a lot of boilerplate)
+```
+
+---
+
+```haskell Example with Either
+data MyType = ...
+data MyError = ...
+
+doStuff :: MyType -> Either MyError MyType
+
+maybeDoStuff :: Maybe MyError -> Either MyError MyType
+maybeDoStuff m = case m of
+  Left err -> Left err
+  Right value ->
+    case doStuff value of
+      Left err -> Left err
+      Right value2 -> Right value2
+----
+* > Another example
+8[1,7], 9[1], 11[1,7], 12[1,7] > Only differences
+```
+
+```notes
+Allows dealing with Eithers in a safe, but boilerplatey way.
+```
+
+---
+
+## Some observations
+
+- Not composable
+- A lot of boilerplate needed
+- Clearly, there must be a better way
+
+---
+
+```haskell Let's refactor some code
+doStuff :: MyType -> Maybe MyType
+
+maybeDoStuff :: Maybe MyType -> Maybe MyType
+maybeDoStuff m = case m of
+  Nothing -> Nothing
+  Just value -> doStuff value
+
+
+
+maybeDoStuff :: Maybe MyType -> (MyType -> Maybe MyType) -> Maybe MyType
+maybeDoStuff m f = case m of
+  Nothing -> Nothing
+  Just value -> f value
+
+
+
+maybeDoStuff :: Maybe a -> (a -> Maybe b) -> Maybe b
+maybeDoStuff m f = case m of
+  Nothing -> Nothing
+  Just value -> f value
+
+
+
+andThenMaybe :: Maybe a -> (a -> Maybe b) -> Maybe b
+andThenMaybe m f = case m of
+  Nothing -> Nothing
+  Just value -> f value
+----
+1:6 > Initial code
+1, 6[7] > This can be explicitly passed in
+10:13 > Can now be used with many more functions
+10[7, 12, 18, 25] > This can be generalized
+17:20 > a doesn't have to equal b, allows more places to use this function
+17[1] > Name can be made more general now too
+24:27 > Final result
+```
+
+---
+
+## Lets refactor some code
+
+- Same refactor possible for many data types
+
+```haskell
+andThenEither :: Either e a -> (a -> Either e b) -> Either e b
+andThenEither m f = case m of
+  Left err -> Left err
+  Right value -> f value
+```
+
+---
+
+## Let's take a step back
+
+- Can we generalize this?
+
+```haskell
+andThenMaybe  :: Maybe    a -> (a -> Maybe    b) -> Maybe    b
+andThenEither :: Either e a -> (a -> Either e b) -> Either e b
+andThenIO     :: IO       a -> (a -> IO       b) -> IO       b
+```
+
+---
+
+```haskell Monad typeclass
+class Applicative m => Monad (m :: Type -> Type) where
+  (>>=) :: m a -> (a -> m b) -> m b
+  (>>) :: m a -> m b -> m b
+  return :: a -> m a
+  fail :: String -> m a
+  {-# MINIMAL (>>=) #-}
+----
+* > Typeclass definition
+2,6 > a.k.a. andThen / bind / flatMap in other languages
+3 > Same as (*>) from Applicative ("soon" deprecated)
+4 > Same as pure from Applicative ("soon" deprecated)
+5 > Function moved to other typeclass since GHC8.8
+```
+
+```notes
+Quite some legacy due to historic reasons, gradually is being phased out.
+Migrations of code between version are often fairly trivial due to static typing.
+```
+
+---
+
+## First Monad instances
+
+```haskell
+instance Monad Maybe where
+  (>>=) = andThenMaybe
+
+instance Monad Either where
+  (>>=) = andThenEither
+
+instance Monad IO where
+  (>>=) = _ -- requires use of RTS internals
+
+instance Monad Identity where
+  (Identity a) >>= f = f a
+
+-- Also try out ":i Monad" in REPL
+```
+
+```notes
+RTS stands for the (Haskell) runtime system
+```
+
+---
+
+## A different perspective
+
+```haskell
+(>>=) :: Monad m => m a -> (a -> m b) -> m b
+```
+
+- Everything **not** known 'statically' up front
+- We have to evaluate **m a** first
+- Explicit ordering of actions
+- &#x2192; less optimizations possible
+
+---
+
+```haskell A different perspective
+(<*>) :: Applicative f => f (a -> b) -> f a -> f b
+
+(=<<) :: Monad       m => (a -> m b) -> m a -> m b
+
+-- Note: (=<<) = flip (>>=)
+----
+* > Applicative vs Monad
+1[12:20], 3[13:21] > Main difference
+```
+
+---
+
+```haskell A note on do-syntax
+action = do
+  putStr "Hello"
+  putStr "world!"
+  putStr "\\n"
+
+action =
+  putStr "Hello" >>
+  putStr "world!" >>
+  putStr "\\n"
+
+
+action' = do
+  x1 <- action1
+  x2 <- action2 42
+  action3 x1 x2
+
+action' =
+  action1
+    >>= (\\x1 -> action2 42
+      >>= (\\x2 -> action3 x1 x2))
+----
+1:9 > desugaring to ">>"
+12:20 > desugaring to ">>="
+```
+
+---
+
+## A note on do-syntax
+
+- do-syntax is syntax sugar
+- Polymorphic (only requires Monad constraint)
+- Cleans monadic code up a lot
+
+---
+
+```haskell Some examples
+newtype Name = Name Text
+newtype Age = Age Int
+data Dog = Dog Name Age
+
+validateName :: Text -> Maybe Name
+validateAge :: Int -> Maybe Age
+
+
+-- What can the following examples return?
+
+example1 :: Text -> Int -> Maybe Dog
+example1 nameText years = do
+  name <- validateName nameText
+  age <- validateYears years
+  pure $ Dog name age
+
+
+example2 :: Monad m => m Int
+example2 = do
+  -- some more code...
+  pure 42
+----
+1:6 > Setup code
+9:15 > Validation using monads
+18:21 > Another example
+```
+
+---
+
+## Using monads to represent effects
+
+- [Reader](https://hackage.haskell.org/package/mtl-2.2.2/docs/Control-Monad-Reader.html): Read-only state
+- [Writer](https://hackage.haskell.org/package/mtl-2.2.2/docs/Control-Monad-Writer-Lazy.html): Write-only state
+- [State](https://hackage.haskell.org/package/mtl-2.2.2/docs/Control-Monad-State-Lazy.html): Read + write state
+- [Except (Either)](https://hackage.haskell.org/package/mtl-2.2.2/docs/Control-Monad-Except.html): Error handling
+- ... and many more
+
+---
+
+## Using monads to represent effects
+
+- "Plumbing"
+- Functions for specific functionality
+- Functions for extracting result values from the monadic action
+- Effects are contained (pure to the outside world)
+- Custom effects built out of other effects
+
+---
+
+```haskell Examples
+-- State: s -> a -> (s, a)
+
+type Counter a = State Int a
+
+increment :: Counter ()
+increment = modify (+1)
+
+increment' :: Counter ()
+increment' = do
+  current <- get
+  put $ current + 1
+
+evalCounter :: Int -> Counter a -> Int
+evalCounter start counter = execState counter start
+
+three :: Int
+three = evalCounter 0 $ do
+  increment
+  increment
+  increment
+----
+1 > Representation of state
+3 > Type synonym for convenience
+5:6 > Monadic helper function
+8:11 > Alternate implementation
+13:14 > Extracting a counter value
+16:20 > Computing a value
+```
+
+---
+
+```haskell Examples
+data NumberError = NegativeValue Int | DivideByZero
+
+someFunc :: Int -> Either NumberError Int
+someFunc x = do
+  when (x < 0) $ throwError $ NegativeValue x
+  pure $ x + 1
+
+example :: Int -> Int -> Either NumberError Int
+example a b = do
+  a' <- someFunc a
+  b' <- someFunc b
+  when (b' == 0) $ throwError DivideByZero
+  pure $ div a' b'
+----
+1 > An error type for all possible errors in our usecase
+3:6 > A function that might throw errors
+8:13 > Composition of monadic functions
+```
+
+```notes
+Error handling done automatically due to Either monad
+```
+
+---
+
+```haskell Examples
+data Expr = Var String
+          | Add Expr Expr
+          | Mul Expr Expr
+          -- ...
+
+type Env :: Map String Int
+
+interpret1 :: Env -> Expr -> Int
+interpret1 env e = case e of
+  Var x -> case Map.lookup x env of
+    Nothing -> _ -- Q: how to handle this properly?
+    Just value -> value
+  Add e1 e2 -> interpret1 env e1 + interpret env e2
+  Mul e1 e2 -> interpret1 env e1 * interpret env e2
+
+
+interpret2 :: Env -> Expr -> Int
+interpret2 env e = runReader (go e) env where
+  go :: Expr -> Reader Env Int
+  go e = case e of
+    Var x -> do
+      env <- ask
+      case Map.lookup x env of
+        Nothing -> _ -- Q: how to handle this properly?
+        Just value -> pure value
+    Add e1 e2 -> (+) <$> go e1 <*> go e2
+    Mul e1 e2 -> (*) <$> go e1 <*> go e2
+
+
+data InterpretError = VarNotFound String
+
+interpret3 :: Env -> Expr -> Either InterpretError Int
+interpret3 env e = runExcept $ runReaderT (go e) env where
+  go e = case e of
+    Var x -> do
+      env <- ask
+      case Map.lookup x env of
+        Nothing -> throwError $ VarNotFound x
+        Just value -> pure value
+    Add e1 e2 -> (+) <$> go e1 <*> go e2
+    Mul e1 e2 -> (*) <$> go e1 <*> go e2
+----
+1:14 > First way of evaluating an expression
+10[9:15] > Only place we actually need the environment
+13[11,19], 14[11,19] > But have to pass env everywhere
+17:27 > Second way of evaluating
+30:41 > And now with error handling
+```
+
+```notes
+- This is actually a monad transformer (combination of 2+ monadic effects)
+- TODO check if last snippet is correct, didn't typecheck it
+```
+
+---
+
+## Using monads to represent effects
+
+- Allows sequencing of expressions
+- Forces an explicit evaluation order, with a certain *effect*
+- Imperative concepts can be mapped onto Monads
+- "Programmable semicolon"
+
+---
+
+## Examples in the ecosystem
+
+- [mtl](https://hackage.haskell.org/package/mtl)
+- [megaparsec](https://hackage.haskell.org/package/megaparsec)
+- [async](https://hackage.haskell.org/package/async)
+- [monad-par](https://hackage.haskell.org/package/monad-par)
+- ... (pretty much most libraries on hackage)
+
+---
+
+## Monad laws
+
+1. Functor laws must hold
+2. Applicative laws must hold
+3. `Left identity`: pure a >>= f = f a
+4. `Right identity`: m >>= pure = m
+5. `Associativity`: (m >=> f) >=> g = m >=> (g >=> h)
+
+---
+
+## Conclusion
+
+- Monads: powerful concept, based on simple core idea
+- Allows Haskell to perform IO
+- Support for first class effects
+- Do syntax: clean way of writing effectful code
+- Haskell: the best imperative language? 😂
+
+---
+
+## Next time
+
+- BF interpreter
+
+```notes
+Interpreter forms a good showcase of examples from last time
+Also will be our full-fledged Haskell program
+Allows gradually introducing more advanced concepts
+```
+
+---
+
+## Links
+
+- [LYAH on Monads](http://learnyouahaskell.com/a-fistful-of-monads)
+- [do notation](https://en.wikibooks.org/wiki/Haskell/do_notation)
+- [Functors, Applicatives & Monads (in pictures)](http://adit.io/posts/2013-04-17-functors,_applicatives,_and_monads_in_pictures.html)
+
