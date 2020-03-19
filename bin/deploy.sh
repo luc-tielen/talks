@@ -11,6 +11,7 @@ DIRS=(
   haskell/semigroups_and_monoids
   haskell/functors
   haskell/applicative_functors
+  haskell/monads
 )
 
 function setup_node_modules() {
