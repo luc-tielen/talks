@@ -83,8 +83,8 @@ data MyError = ...
 
 doStuff :: MyType -> Either MyError MyType
 
-maybeDoStuff :: Maybe MyError -> Either MyError MyType
-maybeDoStuff m = case m of
+eitherDoStuff :: Either MyError MyError -> Either MyError MyType
+eitherDoStuff m = case m of
   Left err -> Left err
   Right value ->
     case doStuff value of
@@ -396,15 +396,15 @@ data Expr = Var String
           | Mul Expr Expr
           -- ...
 
-type Env :: Map String Int
+type Env = Map String Int
 
 interpret1 :: Env -> Expr -> Int
 interpret1 env e = case e of
   Var x -> case Map.lookup x env of
     Nothing -> _ -- Q: how to handle this properly?
     Just value -> value
-  Add e1 e2 -> interpret1 env e1 + interpret env e2
-  Mul e1 e2 -> interpret1 env e1 * interpret env e2
+  Add e1 e2 -> interpret1 env e1 + interpret1 env e2
+  Mul e1 e2 -> interpret1 env e1 * interpret1 env e2
 
 
 interpret2 :: Env -> Expr -> Int
