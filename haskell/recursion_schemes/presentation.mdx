@@ -1,0 +1,392 @@
+import Title from "../../components/Title";
+import SVG from "../../components/SVG";
+import { components } from "mdx-deck-code-surfer"
+import { withCodeSurfer } from "mdx-deck-kabisa-theme"
+import { CodeSurfer } from "mdx-deck-code-surfer";
+export const theme = withCodeSurfer(CodeSurfer)
+
+
+<SVG contents={require("./images/haskell_logo.svg")} width="20%"/>
+<Title contents="Recursion Schemes"/>
+
+---
+
+## Table of contents
+
+- Introduction
+- Fix
+- Recursion schemes
+- Questions
+
+---
+
+## Introduction
+
+```haskell
+length :: [a] -> Int
+length [] = 0
+length (_:xs) = 1 + length xs
+
+sum :: [a] -> Int
+sum = foldl' (+) 0
+```
+
+- Haskell: recursion + higher order functions i.s.o. loops
+- &#x2192; *less* boilerplate & errors
+- Can we reduce this even further?
+
+---
+
+```haskell Factoring out recursion
+data Expr = Val Int
+          | Var String
+          | Sum Expr Expr
+
+
+data Expr' a = Val a
+             | Var String
+             | Sum Expr Expr
+             deriving Functor
+
+type Expr2 = Expr' Int
+
+
+data ExprF r = Val Int
+             | Var String
+             | Sum r r
+             deriving Functor
+----
+1:3 > A simple expression data type
+6:11 > Expr can be made a functor
+14:17 > Another way Expr can be a functor
+14[5], 16[5, 7] > No reference to ExprF in arguments of constructors
+```
+
+```notes
+Expr' is already more powerful than the first Expr.
+It can be used for anything that can be added together.
+```
+
+---
+
+## A closer look.. (1)
+
+```haskell
+data ExprF r = Val Int
+             | Var String
+             | Sum r r
+             deriving Functor
+```
+
+- ExprF describes the structure (pattern) of an expression
+- ExprF = `pattern functor`
+
+```notes
+The F at the end is a common idiom to indicate that it is a (pattern) functor.
+```
+
+---
+
+```haskell A closer look.. (2)
+a, b, c :: ExprF Int
+a = Val 42
+b = Var "x"
+c = Sum 21 21
+
+d, e :: ExprF (ExprF Int)
+d = Val 1337
+e = Sum (Val 1300) (Sum 30 7)
+----
+1:4 > 1 layer deep
+6:8 > 2 layers deep
+```
+
+```notes
+Tip: play around with these examples using hole driven development for a better understanding of what's going on.
+```
+
+---
+
+## Generalizing this pattern
+
+```haskell
+expr :: ExprF (ExprF (ExprF (ExprF (ExprF ...))
+```
+
+- `N` levels: `N` occurences of ExprF in type
+- Arbitrary amount of levels deep?
+
+---
+
+## Introducing Fix
+
+```haskell
+data Fix f = Fix { unfix :: f (Fix f) }
+```
+
+- Name origin: *fixpoint* (from math)
+- Helps "tying the knot" on type level
+- kind Fix = `(Type -> Type) -> Type`
+
+```notes
+A fixpoint is when you repeatedly apply a function and the result after each
+function application stays the same.
+```
+
+---
+
+```haskell Using Fix
+data ExprF r = Val' Int
+             | Var' String
+             | Sum' r r
+             deriving Functor
+
+type Expr = Fix ExprF
+
+{-# LANGUAGE PatternSynonyms #-}
+
+pattern Val :: Int -> Expr
+pattern Val x = Fix (Val' x)
+
+pattern Var :: String -> Expr
+pattern Var x = Fix (Var' x)
+
+pattern Sum :: Expr -> Expr -> Expr
+pattern Sum e1 e2 = Fix (Sum' e1 e2)
+
+a, b :: Expr
+a = Val 42  -- or: Fix (Val' 42)
+b = Sum (Val 10) (Sum (Var "x") (Val 5))
+-- or: b = Fix (Sum' (Fix (Val' 10))
+--                   (Fix (Sum' (Fix (Var' "x"))
+--                              (Fix (Val' 5)))))
+----
+1:4 > Our earlier defined data type
+6 > Tying the knot
+8:17 > Synonyms for convenience
+19:25 > Expr can be arbitrarily deep now
+```
+
+```notes
+Tying the knot: Fix and ExprF can interleave each other now, arbitrary amount of levels deep
+"Expr" can be arbitrary amount of levels deep thanks to Fix
+Instead of pattern synonyms, normal functions could also be used.
+PatternSynonyms however also allows pattern matching (unlike functions)
+```
+
+---
+
+## Recursion schemes
+
+- Recursive algorithms: divided into groups (= *schemes*)
+- Write algorithm from perspective of 1 layer
+- Helper functions do all recursion for you
+
+---
+
+## Catamorphisms
+
+```haskell
+cata :: Functor f => (f a -> a) -> Fix f -> a
+cata alg = alg . fmap (cata alg) . unFix
+```
+
+- Reduces recursive structure to single value
+
+```notes
+Mnemonic: catastrophe -> break things down.
+Also yes, the names used are a little insane.
+Recursion works bottom up (leaf nodes first).
+Also, you don't need to know the internals to use this function (like with all upcoming schemes)
+```
+
+---
+
+## Using cata
+
+```haskell
+{-# LANGUAGE LambdaCase #-}
+
+countVars :: Expr -> Int
+countVars = cata $ \\case
+  Var' _ -> 1
+  Sum' count1 count2 -> count1 + count2
+  _ -> 0
+```
+
+- No recursion in algorithm
+- Only pattern match "interesting" cases
+
+---
+
+## Using cata (2)
+
+```haskell
+{-# LANGUAGE LambdaCase #-}
+
+data ListF a r = Nil | Cons a r
+  deriving Functor
+
+type List a = Fix ListF
+
+length :: List a -> Int
+length = cata $ \\case
+  Nil -> 0
+  Cons _ xs -> 1 + xs
+```
+
+```notes
+LambdaCase extension: \\case = \\x -> case x of ...
+-> 1 less variable to name, less boilerplate
+```
+
+---
+
+## Anamorphisms
+
+```haskell
+ana :: Functor f => (a -> f a) -> a -> Fix f
+ana alg = Fix . fmap (ana alg) . alg
+```
+
+- Unfolds a seed value into recursive structure
+
+```notes
+Why the name ana? Comes from Greek, means: "building"
+```
+
+---
+
+## Using ana
+
+```haskell
+list50To1 :: List Int
+list50To1 = ana f 50 where
+  f 0 = Nil
+  f n = Cons n (n - 1)
+```
+
+- n - 1 &#x2192; seed for rest of structure
+
+---
+
+## Let's take a step back
+
+```haskell
+cata :: Functor f => (f a -> a) -> Fix f -> a
+cata alg = alg . fmap (cata alg) . unFix
+
+ana :: Functor f => (a -> f a) -> a -> Fix f
+ana alg = Fix . fmap (ana alg) . alg
+```
+
+- "Reversed" type signatures
+- "Reversed" implementations
+- Can we use ana to build data and reduce with cata?
+
+---
+
+## Hylomorphisms
+
+```haskell
+hylo :: Functor f => (f b -> b) -> (a -> f a) -> a -> b
+hylo f g = cata f . ana g
+
+-- or (more efficiently):
+hylo f g = f . fmap (hylo f g) . g
+```
+
+- Unfold followed by a fold
+- Also called a *refold*
+- No fixpoint visible externally
+
+---
+
+## Hylomorphism example
+
+```haskell
+sum0ToN :: Int -> Int
+sum0ToN = hylo computeSum buildList where
+  buildList = \\case
+    0 -> Nil
+    n -> Cons n (n - 1)
+  computeSum = \\case
+    Nil -> 0
+    Cons n xs -> n + xs
+```
+
+```notes
+This is a toy example, can be used for things like interpreters (parse = unfold, eval = fold).
+```
+
+---
+
+## Effectful folds
+
+- Monadic variants: `cataM`, `anaM`, `hyloM`, ...
+
+```haskell
+data InterpretError = UnboundVar String
+
+interpret :: Env -> Expr -> Either InterpretError Int
+interpret env = runExcept $ cataM $ \\case
+  Val' value -> pure value
+  Var' var -> do
+    case Map.lookup var env of
+      Nothing -> throwError $ UnboundVar var
+      Just value -> pure value
+  Sum' e1 e2 -> liftA2 (+) e1 e2
+```
+
+```notes
+No need for Reader monad like we did before in a previous talk.
+No threading of environment is needed through the code since we are thinking on the level of a single layer.
+It might be convenient to reintroduce it if the env will be passed to many other helper functions though.
+```
+
+---
+
+## Even more variations
+
+- para, apo, histo, futu, chrono, ...
+- Start from your usecase, figure out which is most appropriate
+- [recursion-schemes](https://hackage.haskell.org/package/recursion-schemes) provides all these functions
+
+---
+
+## Final notes on recursion schemes
+
+- Actual library on Hackage goes much, *much* further
+- Generalizes all recursion schemes to just 3 functions
+- Uses Template Haskell to generate pattern functor definitions
+
+---
+
+## Conclusion
+
+- Recursion schemes: write algorithm without manual recursion
+- Much less boilerplate & errors
+- Limited to specific form of ADT (no mutual recursion)
+- Added mental overhead
+
+```notes
+Mutual recursion is handled by other libraries such as multirec for example.
+These libraries however require a lot more type level programming than with the single ADT approach used here.
+```
+
+---
+
+## Links
+
+- [fix](https://hackage.haskell.org/package/data-fix)
+- [recursion-schemes](https://hackage.haskell.org/package/recursion-schemes)
+- [Blog post series on recursion-schemes](https://blog.sumtypeofway.com/posts/introduction-to-recursion-schemes.html)
+- [Practical recursion schemes](https://medium.com/@jaredtobin/practical-recursion-schemes-c10648ec1c29)
+- [FP with bananas, lenses, envelopes and barbed wire](https://research.utwente.nl/en/publications/functional-programming-with-bananas-lenses-envelopes-and-barbed-w)
+
+---
+
+## Next time
+
+- Free monads?
+- Anatomy of a Haskell library?

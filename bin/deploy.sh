@@ -14,6 +14,7 @@ DIRS=(
   haskell/monads
   haskell/bf
   haskell/gadts
+  haskell/recursion_schemes
   haskell/free
 )
 
