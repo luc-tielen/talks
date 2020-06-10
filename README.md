@@ -1,8 +1,8 @@
 This page contains a collection of talks I have given in the past:
 
 - [ast transforms](https://luc-tielen.github.io/talks/ast_transforms)
-- [property based_testing](https://luc-tielen.github.io/talks/property_based_testing)
-- [higher order_functions](https://luc-tielen.github.io/talks/higher_order_functions)
+- [property based testing](https://luc-tielen.github.io/talks/property_based_testing)
+- [higher order functions](https://luc-tielen.github.io/talks/higher_order_functions)
 - haskell
   - [introduction](https://luc-tielen.github.io/talks/haskell/introduction)
   - [polymorphism and_typeclasses](https://luc-tielen.github.io/talks/haskell/polymorphism_and_typeclasses)
@@ -12,6 +12,7 @@ This page contains a collection of talks I have given in the past:
   - [monads](https://luc-tielen.github.io/talks/haskell/monads)
   - [bf](https://luc-tielen.github.io/talks/haskell/bf)
   - [gadts](https://luc-tielen.github.io/talks/haskell/gadts)
+  - [recursion schemes](https://luc-tielen.github.io/talks/haskell/recursion_schemes)
   - [free](https://luc-tielen.github.io/talks/haskell/free)
   
 
