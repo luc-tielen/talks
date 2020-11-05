@@ -1,7 +1,7 @@
-
 import Title from "../components/Title";
 import { InlineSVG, SVG } from "../components/SVG";
 import Image from "../components/Image";
+import { Steps, Step } from "../components/Steps";
 import { FootNotes, FootNote } from "../components/FootNote";
 import { components } from "mdx-deck-code-surfer"
 import { withCodeSurfer } from "mdx-deck-kabisa-theme"
@@ -16,17 +16,34 @@ export const theme = withCodeSurfer(CodeSurfer)
 
 ---
 
+# Table of contents
+
+- A little backstory..
+- souffle-haskell showcase
+  - features
+  - examples
+- Questions
+
+---
+
 # A little backstory..
 
-- Interested in FP + compilers
-- GRIN
-- Soufflé
+<Steps>
+  <Step>Quest for correctness and robustness</Step>
+  <Step>Elixir and Haskell</Step>
+  <Step>FP + compilers</Step>
+  <Step>GRIN</Step>
+  <Step>Soufflé</Step>
+</Steps>
 
 ```notes
-My interests in FP + compilers lead me to GRIN, an experimental FP compiler backend.
+I've always been driven to find technologies that make it easy to write correct and robust programs.
+On this quest, I came across functional programming, which was an eye-opener compared to traditional OO / imperative languages.
+My interests in FP + compilers eventually lead me to GRIN, an experimental FP compiler backend.
 Internally, they were using Soufflé for complex analysis of programs and was intrigued.
 I investigated Soufflé and saw that it had a C++ API and started tinkering with it.
 Before I knew it I had a working prototype, that called Soufflé from Haskell via C++ API.
+A new library was born. :)
 ```
 
 ---
@@ -37,6 +54,7 @@ Before I knew it I had a working prototype, that called Soufflé from Haskell vi
 - Great for static analysis, security checks, graph algorithms, ...
 - Rapid prototyping and experimentation
 - Transpiles to *very* high performance C++
+- Communication via C++ API or CSV files
 
 ```notes
 Datalog is a subset of Prolog (a logic programming language).
@@ -211,11 +229,19 @@ The 3 typeclasses are:
 - Identical API (only change 1 import!)
 - &#x2192; Quick development + good performance
 
+```notes
+Interpreted mode is when you use the souffle interpreter from Haskell.
+Communication then is via CSV files.
+Compiled mode is when you use souffle to compile a datalog program to C++.
+The resulting C++ is then embedded in the Haskell executable and communication
+happens via the Souffle C++ API.
+```
+
 ---
 
 ### Compile time checks
 
-- Based on type level information (via `Program` + `Fact`)
+- Based on type level information (via `Program` + `Fact` + Generics)
 - Custom type errors for better dev experience
 
 TODO show some examples of type errors
@@ -356,23 +382,35 @@ NOTE: reachable(x, y) works because reachable is a function that takes a 2-eleme
 
 ---
 
-## Metaprogramming Datalog
+## Metaprogramming Datalog (1)
+
+- Problem: no builtin function for distinct variables in Soufflé
+- Error-prone and tedious to write manually
+- Can we piggyback on Haskell?
+
+```notes
+I found about this when experimenting with a graph that contained cycles
+in which I had to find the most efficient path. Because of the cycles,
+I either had to keep track of all visited nodes, or list out all constraints explicitly.
+```
+
+---
+
+## Metaprogramming Datalog (1)
 
 ```haskell
 import Data.List (tails)
 import Data.Foldable (traverse_)
 
 pairs :: [a] -> [(a, a)]
-pairs l = [(x,y) | (x:ys) <- tails l, y <- ys]
+pairs xs = [(x, y) | (x:ys) <- tails xs, y <- ys]
 -- pairs [1,2,3] => [(1,2), (1,3), (2,3)]
 
--- TODO: correct type + implementation?
-distinctVars :: [Var] -> DSL prog ctx ()
+distinctVars :: [Term ctx ty] -> Body ctx ()
 distinctVars vars =
-  let varPairs = pairs vars
-  in traverse_ (uncurry (.!=)) varPairs
-
-TODO finish + show generated program (+ command?) + afbeelding
+  let varPairs = pairs vars
+   in traverse_ (uncurry (.!=)) varPairs
+  -- OR: traverse_ (\\(v1, v2) -> v1 .!= v2) varPairs
 ```
 
 ```notes
@@ -382,7 +420,14 @@ Metaprogramming becomes simply applying functions to these values to transform e
 
 ---
 
-```haskell Metaprogramming Datalog
+## Metaprogramming Datalog (2)
+
+- DSL: some repetition in logic statements so far
+- Can we write this only once (polymorphically?)
+
+---
+
+```haskell Metaprogramming Datalog (2)
 -- Note: Type signature not required
 transitiveVia :: forall prog p1 p2 t. Structure p1 ~ Structure p2
               => Structure p1 ~ '[t, t]
@@ -422,10 +467,10 @@ Should functions like this be added as reusable functions? Separate library?
 
 ## Benefits
 
-- 1 language less in codebase
+- FP + logic part now both in Haskell
 - DL program is a Haskell value, can be transformed via functions
-- More code reuse possible
 - Can implement concepts via code generation (distinctVars example)
+- More code reuse possible
 
 ---
 
@@ -433,6 +478,7 @@ Should functions like this be added as reusable functions? Separate library?
 
 - Only (large) subset of Soufflé supported
 - Not all errors captured in typesystem
+- Added complexity
 
 ```notes
 DSL covers most usecases, but feature missing? Use approach with external .dl file!
@@ -445,7 +491,20 @@ More errors could be captured via extra semantic analysis pass, or via different
 
 ---
 
-## 1. GRIN
+## 1. souffle-haskell
+
+- [Script](https://github.com/luc-tielen/souffle-haskell/blob/master/scripts/import_souffle_headers.hs#L26-L86) for computing minimal C++ includes
+
+![Dogfooding](./images/dogfood.jpeg)
+
+```notes
+- C++ includes are needed for stand-alone package (users of souffle powered algorithm do not need to install headers separately)
+- Source code: https://github.com/luc-tielen/souffle-haskell/blob/master/scripts/import_souffle_headers.hs#L66-L86
+```
+
+---
+
+## 2. GRIN
 
 - = experimental FP compiler backend ([Github](https://github.com/grin-compiler/grin))
 - souffle-haskell used in unmerged [PR](https://github.com/grin-compiler/grin/pull/108)
@@ -458,7 +517,7 @@ More errors could be captured via extra semantic analysis pass, or via different
 
 ---
 
-## 2. GHC-WPC
+## 3. GHC-WPC
 
 - = Experimental Whole Program Compiler for Haskell ([Github](https://github.com/grin-compiler/ghc-whole-program-compiler-project))
 
@@ -472,23 +531,11 @@ Source code:
 
 ---
 
-## 3. souffle-haskell
-
-- [Script](https://github.com/luc-tielen/souffle-haskell/blob/master/scripts/import_souffle_headers.hs#L26-L86) for computing minimal C++ includes
-
-![Dogfooding](./images/dogfood.jpeg)
-
-```notes
-- C++ includes are needed for stand-alone package (users of souffle powered algorithm do not need to install headers separately)
-- Source code: https://github.com/luc-tielen/souffle-haskell/blob/master/scripts/import_souffle_headers.hs#L66-L86
-```
-
----
-
 ## 4. Your future project?
 
 ```notes
 - Somebody is trying to use it in test framework to map failing test back to description
+- Still many undiscovered opportunities!
 ```
 
 ---
@@ -502,6 +549,10 @@ Source code:
 
 ```notes
 I hope this talk convinced you of the power of combining FP & LP.
+On the one hand, FP is all about data, and functions transforming that data.
+On the other hand, Datalog takes some input facts (data) and derives additional facts.
+In a way, Datalog is like "fuel" for a FP language.
+
 There are still many opportunities that can be explored.
 Having the typesystem of Haskell made it really easy to enforce certain invariants,
 carry around proofs on type level (and still have nice error messages!).
@@ -516,13 +567,5 @@ On top of that, there is a lot of OS-specific stuff you need to take into accoun
 - ![](./images/twitter.png) [@luctielen](https://twitter.com/luctielen)
 - ![](./images/github.png) [https://github.com/luc-tielen/souffle-haskell](https://github.com/luc-tielen/souffle-haskell)
 - [https://souffle-lang.github.io/](https://souffle-lang.github.io/)
-
----
-
-TODO: more examples
-  - typechecker?
-  - security (access log, protocols)
-  - program analysis?
-  - schematic how approach with souffle works?
-TODO more figures
+- [Souffle PLDI tutorial](https://souffle-lang.github.io/pdf/SoufflePLDITutorial.pdf)
 
