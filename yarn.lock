@@ -4581,9 +4581,9 @@ mdx-deck-code-surfer@^0.5.3:
     code-surfer "^0.5.5"
     memoize-one "^4.0.2"
 
-mdx-deck-kabisa-theme@luc-tielen/mdx-deck-kabisa-theme#c421016dcc9e2614ad2dfef178724d675825c311:
+mdx-deck-kabisa-theme@luc-tielen/mdx-deck-kabisa-theme#965ce6549fabfae8ae88d02a02ddf446f3380918:
   version "0.1.0"
-  resolved "https://codeload.github.com/luc-tielen/mdx-deck-kabisa-theme/tar.gz/c421016dcc9e2614ad2dfef178724d675825c311"
+  resolved "https://codeload.github.com/luc-tielen/mdx-deck-kabisa-theme/tar.gz/965ce6549fabfae8ae88d02a02ddf446f3380918"
   dependencies:
     mdx-deck "^1.7.14"
     react "^16.0.0"
@@ -5479,8 +5479,8 @@ prepend-http@^2.0.0:
 
 prism-react-renderer@^0.1.3, prism-react-renderer@luc-tielen/prism-react-renderer#master:
   version "0.1.5"
-  uid a7643cee60573549d666ac69d0a76262e207ea11
-  resolved "https://codeload.github.com/luc-tielen/prism-react-renderer/tar.gz/a7643cee60573549d666ac69d0a76262e207ea11"
+  uid f347c012021c4f394582e033331ceec7b7e0081e
+  resolved "https://codeload.github.com/luc-tielen/prism-react-renderer/tar.gz/f347c012021c4f394582e033331ceec7b7e0081e"
 
 prismjs@^1.8.4, prismjs@~1.17.0:
   version "1.17.1"

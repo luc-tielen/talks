@@ -10,7 +10,7 @@
     "d3": "^5.11.0",
     "mdx-deck": "^1.10.0",
     "mdx-deck-code-surfer": "^0.5.3",
-    "mdx-deck-kabisa-theme": "luc-tielen/mdx-deck-kabisa-theme#c421016dcc9e2614ad2dfef178724d675825c311",
+    "mdx-deck-kabisa-theme": "luc-tielen/mdx-deck-kabisa-theme#965ce6549fabfae8ae88d02a02ddf446f3380918",
     "prism-react-renderer": "luc-tielen/prism-react-renderer#master",
     "prop-types": "^15.0.0",
     "react": "^16.0.0",
