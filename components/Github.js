@@ -7,18 +7,16 @@ const Span = styled.span({
   alignItems: "center"
 });
 
-const Img = styled.div({
+const Img = styled.img({
   width: "10%",
-  height: "100%",
-  fill: "white"
+  paddingRight: "10px"
 });
 
-// <img src="./images/github.png" />
 const Github = ({ repo }) => {
   const url = `https://github.com/${repo}.git`;
   return (
     <Span>
-      <Img dangerouslySetInnerHTML={{ __html: logo }} />
+      <Img src={logo}/>
       <a href={url}>{url}</a>
     </Span>
   );

@@ -7,13 +7,14 @@ const Span = styled.span({
   alignItems: "center"
 });
 
-const Img = styled.div({
-  width: "10%"
+const Img = styled.img({
+  width: "10%",
+  paddingRight: "10px"
 });
 
 const Twitter = () => (
   <Span>
-    <Img dangerouslySetInnerHTML={{ __html: logo }} />
+    <Img src={logo} />
     <a href="https://twitter.com/luctielen">@luctielen</a>
   </Span>
 );

@@ -7,12 +7,14 @@ const Div = styled.div({
   maxWidth: "100%"
 });
 
-export const SVG = ({ contents, width = "80%" }) => (
-  <Div style={{ width }} dangerouslySetInnerHTML={{ __html: contents }} />
-);
-
 export const InlineSVG = ({ contents, width = "80%" }) => (
   <img src={contents} style={{ width }} />
+);
+
+export const SVG = ({width, ...props}) => (
+  <Div style={{ width }}>
+    <InlineSVG {...props}/>
+  </Div>
 );
 
 export default SVG;

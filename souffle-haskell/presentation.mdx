@@ -1,7 +1,8 @@
 import Title from "../components/Title";
 import TwitterInfo from "../components/Twitter";
 import GithubInfo from "../components/Github";
-import { InlineSVG, SVG } from "../components/SVG";
+import { InlineSVG } from "../components/SVG";
+import Dot from "../components/Dot";
 import Image from "../components/Image";
 import { Steps, Step } from "../components/Steps";
 import { FootNotes, FootNote } from "../components/FootNote";
@@ -70,7 +71,7 @@ limiting expressivity (but does enable some optimizations).
 
 - Compute all nodes that are reachable from another
 
-<SVG contents={require("./schematics/graph.dot")}
+<Dot contents={require("./schematics/graph.dot")}
      width="25vw"/>
 
 ```notes
@@ -295,7 +296,7 @@ tests/Test/Language/Souffle/MarshalSpec.hs:69:10: error:
 
 ## Self contained
 
-<SVG contents={require("./schematics/self_contained.dot")}
+<Dot contents={require("./schematics/self_contained.dot")}
      width="25vw"/>
 
 - No dependency on souffle for transitive dependencies *
@@ -609,6 +610,11 @@ On top of that, there is a lot of OS-specific stuff you need to take into accoun
 <TwitterInfo/>
 <GithubInfo repo="luc-tielen/souffle-haskell"/>
 
+---
+
+# Links
+
+- [https://luc-tielen.github.io/talks/haskell/souffle-haskell](https://luc-tielen.github.io/talks/haskell/souffle-haskell)
 - [https://souffle-lang.github.io/](https://souffle-lang.github.io/)
 - [Souffle PLDI tutorial](https://souffle-lang.github.io/pdf/SoufflePLDITutorial.pdf)
 
