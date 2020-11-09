@@ -1,4 +1,6 @@
 import Title from "../components/Title";
+import TwitterInfo from "../components/Twitter";
+import GithubInfo from "../components/Github";
 import { InlineSVG, SVG } from "../components/SVG";
 import Image from "../components/Image";
 import { Steps, Step } from "../components/Steps";
@@ -51,7 +53,7 @@ A new library was born. :)
 ![Souffle logo](./images/souffle_wide_logo.png)
 
 - Datalog variant
-- Great for static analysis, security checks, graph algorithms, ...
+- Static analysis, security checks, graph algorithms, ...
 - Rapid prototyping and experimentation
 - Transpiles to *very* high performance C++
 - Communication via C++ API or CSV files
@@ -241,19 +243,62 @@ happens via the Souffle C++ API.
 
 ### Compile time checks
 
-- Based on type level information (via `Program` + `Fact` + Generics)
+- Based on type level information (`Program` + `Fact` + `Generics`)
 - Custom type errors for better dev experience
 
-TODO show some examples of type errors
+---
+
+### Compile time checks
+
+```bash
+tests/Test/Language/Souffle/CompiledSpec.hs:100:9: error:
+    • You tried to use an output fact of type Reachable as an input.
+      Possible solution: change the FactDirection of Reachable to
+      either 'Input' or 'InputOutput'.
+    • In the expression: Souffle.addFact prog
+      In a stmt of a 'do' block: Souffle.addFact prog $ Reachable "e" "f"
+      In the expression:
+        do let prog = fromJust handle
+           Souffle.run prog
+           es1 <- Souffle.getFacts prog
+           Souffle.addFact prog $ Edge "e" "f"
+           ....
+    |
+100 |         Souffle.addFact prog $ Reachable "e" "f"
+    |         ^^^^^^^^^^^^^^^^^^^^
+```
+
+---
+
+### Compile time checks
+
+```haskell
+data Edge = Edge String String | Vertex String
+  deriving (Generic)
+instance Marshal Edge
+```
+
+```bash
+tests/Test/Language/Souffle/MarshalSpec.hs:69:10: error:
+    • Error while deriving marshalling code for type Edge:
+      Cannot derive sum type, only product types are supported.
+    • In the expression: Language.Souffle.Marshal.$dmpush @(Edge)
+      In an equation for ‘push’:
+          push = Language.Souffle.Marshal.$dmpush @(Edge)
+      In the instance declaration for ‘Marshal Edge’
+   |
+69 | instance Marshal Edge
+   |          ^^^^^^^^^^^^
+```
 
 ---
 
 ## Self contained
 
-- No dependency on souffle for transitive dependencies *
-
 <SVG contents={require("./schematics/self_contained.dot")}
      width="25vw"/>
+
+- No dependency on souffle for transitive dependencies *
 
 <FootNotes>
   <FootNote>* Only for compiled mode</FootNote>
@@ -282,9 +327,6 @@ Haskell has some features which are really nice for embedded DSLs:
 .decl reachable(n: symbol, m: symbol)
 .input edge
 .output reachable
-
-edge("a", "b").
-edge("b", "c").
 
 reachable(x, y) :- edge(x, y).
 reachable(x, z) :-
@@ -467,10 +509,10 @@ Should functions like this be added as reusable functions? Separate library?
 
 ## Benefits
 
-- FP + logic part now both in Haskell
+- FP + logic part both in Haskell
 - DL program is a Haskell value, can be transformed via functions
-- Can implement concepts via code generation (distinctVars example)
-- More code reuse possible
+- Implement concepts via code generation (distinctVars example)
+- Code reuse
 
 ---
 
@@ -564,8 +606,9 @@ On top of that, there is a lot of OS-specific stuff you need to take into accoun
 
 # Questions?
 
-- ![](./images/twitter.png) [@luctielen](https://twitter.com/luctielen)
-- ![](./images/github.png) [https://github.com/luc-tielen/souffle-haskell](https://github.com/luc-tielen/souffle-haskell)
+<TwitterInfo/>
+<GithubInfo repo="luc-tielen/souffle-haskell"/>
+
 - [https://souffle-lang.github.io/](https://souffle-lang.github.io/)
 - [Souffle PLDI tutorial](https://souffle-lang.github.io/pdf/SoufflePLDITutorial.pdf)
 

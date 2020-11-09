@@ -1,0 +1,10 @@
+digraph {
+  rankdir = "LR";
+  bgcolor=transparent;
+  node[color=white style="filled,solid"];
+  edge[color=white fontcolor=white];
+
+  "package" -> "dependency";
+  "dependency" -> "souffle-haskell";
+  // TODO cross on edge? or add a cluster around with "requires souffle"
+}

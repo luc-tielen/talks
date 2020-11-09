@@ -1,0 +1,14 @@
+digraph {
+  rankdir = "LR";
+  bgcolor=transparent;
+  node[color=white style="filled,solid"];
+  edge[color=white fontcolor=white];
+
+  "c" -> "d";
+  "d" -> "e";
+  "e" -> "f";
+  "f" -> "g";
+  "h" -> "g";
+  "d" -> "h";
+  "a" -> "b";
+}
