@@ -12,12 +12,16 @@ const Img = styled.img({
   paddingRight: "10px"
 });
 
+const A = styled.a({
+  color: "blue"
+});
+
 const Github = ({ repo }) => {
   const url = `https://github.com/${repo}.git`;
   return (
     <Span>
-      <Img src={logo}/>
-      <a href={url}>{url}</a>
+      <Img src={logo} />
+      <A href={url}>{url}</A>
     </Span>
   );
 };

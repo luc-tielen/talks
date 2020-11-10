@@ -12,10 +12,14 @@ const Img = styled.img({
   paddingRight: "10px"
 });
 
+const A = styled.a({
+  color: "blue"
+});
+
 const Twitter = () => (
   <Span>
     <Img src={logo} />
-    <a href="https://twitter.com/luctielen">@luctielen</a>
+    <A href="https://twitter.com/luctielen">@luctielen</A>
   </Span>
 );
 
