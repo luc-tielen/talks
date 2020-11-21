@@ -13,7 +13,7 @@ const Img = styled.img({
 });
 
 const A = styled.a({
-  color: "blue"
+  color: "#296aff"
 });
 
 const Github = ({ repo }) => {
