@@ -4,6 +4,6 @@ digraph {
   node[color=white style="filled,solid"];
   edge[color=white fontcolor=white];
 
-  "package" -> "dependency";
-  "dependency" -> "souffle-haskell";
+  "Interpreted" -> "Compiled";
+  "Compiled" -> "Interpreted";
 }

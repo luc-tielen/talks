@@ -56,7 +56,7 @@ A new library was born. :)
 - Datalog variant
 - Static analysis, security checks, graph algorithms, ...
 - Rapid prototyping and experimentation
-- Transpiles to *very* high performance C++
+- Transpiles to *very* performant C++
 - Communication via C++ API or CSV files
 
 ```notes
@@ -228,9 +228,11 @@ The 3 typeclasses are:
 
 ### 2 modes of operation
 
-- Interpreted vs compiled
+<Dot contents={require("./schematics/modes_of_operation.dot")}
+     width="35vw"/>
+
 - Identical API (only change 1 import!)
-- &#x2192; Quick development + good performance
+- Quick development + good performance
 
 ```notes
 Interpreted mode is when you use the souffle interpreter from Haskell.
@@ -297,7 +299,7 @@ tests/Test/Language/Souffle/MarshalSpec.hs:69:10: error:
 ## Self contained
 
 <Dot contents={require("./schematics/self_contained.dot")}
-     width="25vw"/>
+     width="35vw"/>
 
 - No dependency on souffle for transitive dependencies *
 
@@ -308,6 +310,8 @@ tests/Test/Language/Souffle/MarshalSpec.hs:69:10: error:
 ---
 
 # Soufflé DSL
+
+<Image src={require("./images/we_need_to_go_deeper.jpg")} width="70%"/>
 
 ```notes
 Haskell has some features which are really nice for embedded DSLs:
@@ -439,9 +443,7 @@ I either had to keep track of all visited nodes, or list out all constraints exp
 
 ---
 
-## Metaprogramming Datalog (1)
-
-```haskell
+```haskell Metaprogramming Datalog (1)
 import Data.List (tails)
 import Data.Foldable (traverse_)
 
@@ -454,6 +456,10 @@ distinctVars vars =
   let varPairs = pairs vars
    in traverse_ (uncurry (.!=)) varPairs
   -- OR: traverse_ (\\(v1, v2) -> v1 .!= v2) varPairs
+----
+1:2 > Some imports
+4:6 > Helper function for computing all pairs
+8:12 > Using Haskell for metaprogramming
 ```
 
 ```notes
