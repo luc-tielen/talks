@@ -431,52 +431,12 @@ NOTE: reachable(x, y) works because reachable is a function that takes a 2-eleme
 
 ## Metaprogramming Datalog (1)
 
-- Problem: no builtin function for distinct variables in Soufflé
-- Error-prone and tedious to write manually
-- Can we piggyback on Haskell?
-
-```notes
-I found about this when experimenting with a graph that contained cycles
-in which I had to find the most efficient path. Because of the cycles,
-I either had to keep track of all visited nodes, or list out all constraints explicitly.
-```
-
----
-
-```haskell Metaprogramming Datalog (1)
-import Data.List (tails)
-import Data.Foldable (traverse_)
-
-pairs :: [a] -> [(a, a)]
-pairs xs = [(x, y) | (x:ys) <- tails xs, y <- ys]
--- pairs [1,2,3] => [(1,2), (1,3), (2,3)]
-
-distinctVars :: [Term ctx ty] -> Body ctx ()
-distinctVars vars =
-  let varPairs = pairs vars
-   in traverse_ (uncurry (.!=)) varPairs
-  -- OR: traverse_ (\\(v1, v2) -> v1 .!= v2) varPairs
-----
-1:2 > Some imports
-4:6 > Helper function for computing all pairs
-8:12 > Using Haskell for metaprogramming
-```
-
-```notes
-This works since a Datalog program is represented by a plain Haskell value.
-Metaprogramming becomes simply applying functions to these values to transform entire programs.
-```
-
----
-
-## Metaprogramming Datalog (2)
-
 - DSL: some repetition in logic statements so far
 - Can we write this only once (polymorphically?)
 
 ---
 
-```haskell Metaprogramming Datalog (2)
+```haskell Metaprogramming Datalog (1)
 -- Note: Type signature not required
 transitiveVia :: forall prog p1 p2 t. Structure p1 ~ Structure p2
               => Structure p1 ~ '[t, t]
@@ -510,6 +470,50 @@ Type signature is optional, but helps with type errors. Explicit equality constr
 to make type checker happy.
 
 Should functions like this be added as reusable functions? Separate library?
+```
+
+---
+
+## Metaprogramming Datalog (2)
+
+<InlineSVG contents="./images/sudoku.svg" width="20%"/>
+
+- Problem: no builtin function for distinct variables in Soufflé
+- Error-prone and tedious to write manually
+- Can we piggyback on Haskell?
+
+```notes
+I found about this when experimenting with a graph that contained cycles
+in which I had to find the most efficient path. Because of the cycles,
+I either had to keep track of all visited nodes, or list out all constraints explicitly.
+
+Amount of constraints necessary to mark all vars as distinct / unique: N * (N - 1) / 2
+```
+
+---
+
+```haskell Metaprogramming Datalog (2)
+import Data.List (tails)
+import Data.Foldable (traverse_)
+
+pairs :: [a] -> [(a, a)]
+pairs xs = [(x, y) | (x:ys) <- tails xs, y <- ys]
+-- pairs [1,2,3] => [(1,2), (1,3), (2,3)]
+
+distinctVars :: [Term ctx ty] -> Body ctx ()
+distinctVars vars =
+  let varPairs = pairs vars
+   in traverse_ (uncurry (.!=)) varPairs
+  -- OR: traverse_ (\\(v1, v2) -> v1 .!= v2) varPairs
+----
+1:2 > Some imports
+4:6 > Helper function for computing all pairs
+8:12 > Using Haskell for metaprogramming
+```
+
+```notes
+This works since a Datalog program is represented by a plain Haskell value.
+Metaprogramming becomes simply applying functions to these values to transform entire programs.
 ```
 
 ---
