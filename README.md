@@ -14,6 +14,7 @@ This page contains a collection of talks I have given in the past:
   - [gadts](https://luc-tielen.github.io/talks/haskell/gadts)
   - [recursion schemes](https://luc-tielen.github.io/talks/haskell/recursion_schemes)
   - [free](https://luc-tielen.github.io/talks/haskell/free)
-  
+  - [souffle haskell](https://luc-tielen.github.io/talks/souffle-haskell)
+
 
 Source code for the talks can be found in this [repo](https://github.com/luc-tielen/talks).
