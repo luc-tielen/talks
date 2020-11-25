@@ -13,6 +13,7 @@ const Img = styled.img({
 });
 
 const A = styled.a({
+  fontSize: "1.5em",
   color: "#296aff"
 });
 
