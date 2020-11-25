@@ -16,6 +16,7 @@ DIRS=(
   haskell/gadts
   haskell/recursion_schemes
   haskell/free
+  souffle-haskell
 )
 
 function setup_node_modules() {
