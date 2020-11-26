@@ -1,5 +1,5 @@
 import Split2 from "../layouts/Split2"
-import SVG from "../components/SVG"
+import Dot from "../components/Dot"
 import Image from "../components/Image"
 import Markdown from "react-markdown"
 import { components } from "mdx-deck-code-surfer"
@@ -83,7 +83,7 @@ describe("addition", () => {
 
 ## High level view
 
-<SVG contents={require("./schematics/high_level_view_sut.dot")}
+<Dot contents={require("./schematics/high_level_view_sut.dot")}
      width="75vw"/>
 
 - System under test = SUT
@@ -97,7 +97,7 @@ Important, no side effects!
 
 ## High level view (2)
 
-<SVG contents={require("./schematics/high_level_view_unit_test.dot")}
+<Dot contents={require("./schematics/high_level_view_unit_test.dot")}
      width="75vw"/>
 
 - Single iteration
@@ -108,7 +108,7 @@ Important, no side effects!
 
 ## High level view (3)
 
-<SVG contents={require("./schematics/high_level_view_property_test.dot")}
+<Dot contents={require("./schematics/high_level_view_property_test.dot")}
      width="75vw"/>
 
 - Many iterations

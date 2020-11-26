@@ -1,6 +1,6 @@
 import { Steps, Step } from "../components/Steps"
 import Image from "../components/Image"
-import SVG from "../components/SVG"
+import Dot from "../components/Dot"
 import Split from "../layouts/Split"
 import Markdown from "react-markdown"
 import { Notes } from "mdx-deck"
@@ -35,10 +35,11 @@ export const theme = {
 
 ## Structure of a compiler
 
+
 <Steps>
-  <SVG contents={require("./schematics/compiler_structure.dot")}
+  <Dot contents={require("./schematics/compiler_structure.dot")}
         width="75vw"/>
-  <SVG contents={require("./schematics/compiler_structure2.dot")}
+  <Dot contents={require("./schematics/compiler_structure2.dot")}
         width="75vw"/>
 </Steps>
 
@@ -46,7 +47,7 @@ export const theme = {
 
 ## Abstract Syntax Trees
 
-<SVG contents={require("./schematics/simple_ast.dot")}
+<Dot contents={require("./schematics/simple_ast.dot")}
      width="25vw"/>
 
 Expression: 1 + 2 * 3
@@ -60,9 +61,9 @@ This is now the level at which we will be focusing for the rest of the talk.
 ## AST transformations
 
 <Split>
-  <SVG contents={require("./schematics/ast_transform1.dot")}
+  <Dot contents={require("./schematics/ast_transform1.dot")}
        width="25vw"/>
-  <SVG contents={require("./schematics/ast_transform2.dot")}
+  <Dot contents={require("./schematics/ast_transform2.dot")}
        width="25vw"/>
 </Split>
 
@@ -85,7 +86,7 @@ Focus on: optimizing
 
 ### One-pass compiler (the "monolith")
 
-<SVG contents={require("./schematics/normal_compiler.dot")}
+<Dot contents={require("./schematics/normal_compiler.dot")}
      width="10vw"/>
 
 - Optimizations all at once
@@ -95,7 +96,7 @@ Focus on: optimizing
 
 ### Micropass compiler
 
-<SVG contents={require("./schematics/micropass_compiler.dot")}
+<Dot contents={require("./schematics/micropass_compiler.dot")}
      width="75vw"/>
 
 - Smaller, composable optimizations
@@ -105,7 +106,7 @@ Focus on: optimizing
 
 ### Nanopass compiler
 
-<SVG contents={require("./schematics/nanopass_compiler.dot")}
+<Dot contents={require("./schematics/nanopass_compiler.dot")}
      width="75vw"/>
 
 - Very small, focused optimizations

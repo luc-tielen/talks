@@ -1,0 +1,630 @@
+import Title from "../components/Title";
+import TwitterInfo from "../components/Twitter";
+import GithubInfo from "../components/Github";
+import { InlineSVG } from "../components/SVG";
+import Dot from "../components/Dot";
+import Image from "../components/Image";
+import { Steps, Step } from "../components/Steps";
+import { FootNotes, FootNote } from "../components/FootNote";
+import { components } from "mdx-deck-code-surfer"
+import { withCodeSurfer } from "mdx-deck-kabisa-theme"
+import { CodeSurfer } from "mdx-deck-code-surfer";
+export const theme = withCodeSurfer(CodeSurfer)
+
+<Title contents="Leverage the power of logic programming with souffle-haskell"/>
+<div>
+  <Image src={require("./images/souffle_wide_logo.png")}/>
+  <InlineSVG contents={require("./images/haskell_logo.svg")} width="10%"/>
+</div>
+
+---
+
+# Table of contents
+
+- A little backstory..
+- souffle-haskell showcase
+  - features
+  - examples
+- Questions
+
+---
+
+# A little backstory..
+
+<Steps>
+  <Step>Quest for correctness and robustness</Step>
+  <Step>Elixir and Haskell</Step>
+  <Step>FP + compilers</Step>
+  <Step>GRIN</Step>
+  <Step>Soufflé</Step>
+</Steps>
+
+```notes
+I've always been driven to find technologies that make it easy to write correct and robust programs.
+On this quest, I came across functional programming, which was an eye-opener compared to traditional OO / imperative languages.
+My interests in FP + compilers eventually lead me to GRIN, an experimental FP compiler backend.
+Internally, they were using Soufflé for complex analysis of programs and was intrigued.
+I investigated Soufflé and saw that it had a C++ API and started tinkering with it.
+Before I knew it I had a working prototype, that called Soufflé from Haskell via C++ API.
+A new library was born. :)
+```
+
+---
+
+<Image src={require("./images/souffle_wide_logo.png")}/>
+
+- Datalog variant
+- Static analysis, security checks, graph algorithms, ...
+- Rapid prototyping and experimentation
+- Transpiles to *very* performant C++
+- Communication via C++ API or CSV files
+
+```notes
+Datalog is a subset of Prolog (a logic programming language).
+Datalog for example does not support ungrounded variables on top level,
+limiting expressivity (but does enable some optimizations).
+```
+
+---
+
+## An introductory example
+
+- Compute all nodes that are reachable from another
+
+<Dot contents={require("./schematics/graph.dot")}
+     width="25vw"/>
+
+```notes
+Think for a moment how you would implement this in your language of choice..
+```
+
+---
+
+```prolog An introductory example
+.decl edge(n: symbol, m: symbol)
+.decl reachable(n: symbol, m: symbol)
+
+.input edge
+.output reachable
+
+edge("a", "b").
+edge("c", "d").
+edge("d", "e").
+edge("e", "f").
+edge("f", "g").
+edge("d", "h").
+edge("h", "g").
+
+reachable(x, y) :- edge(x, y).  // base rule
+reachable(x, z) :-              // inductive rule
+  edge(x, y),
+  reachable(y, z).
+----
+1:2 > Predicate types need to be defined up front
+4:5 > Predicates need to be marked explicitly as inputs or outputs
+7:13 > Facts can be added directly in Soufflé, or via API.
+15:18 > Relations can refer to other facts.
+```
+
+```notes
+If you forget to mark something as output, the souffle compiler will optimize most generated code away!
+Quite a large part of the syntax is already on this slide, Soufflé is really compact!
+"," is a logical conjunction ("and"), ";" is logical disjunction ("or")
+Datalog automatically computes the fixpoint of the relations (until no new derived facts are found).
+```
+
+---
+
+```haskell Binding Haskell to Soufflé
+{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, DeriveGeneric #-}
+
+module Main ( main ) where
+
+import qualified Language.Souffle.Compiled as Souffle
+import GHC.Generics
+import Data.Foldable ( traverse_ )
+import Control.Monad.IO.Class
+import Data.Vector
+
+
+data Path = Path
+
+data Edge = Edge String String
+  deriving (Eq, Show, Generic)
+
+data Reachable = Reachable String String
+  deriving (Eq, Show, Generic)
+
+instance Souffle.Program Path where
+  type ProgramFacts Path = [Edge, Reachable]
+  programName = const "path"
+
+instance Souffle.Fact Edge where
+  type FactDirection Edge = 'Souffle.Input
+  factName = const "edge"
+
+instance Souffle.Fact Reachable where
+  type FactDirection Reachable = 'Souffle.Output
+  factName = const "reachable"
+
+instance Souffle.Marshal Edge
+instance Souffle.Marshal Reachable
+
+
+main :: IO ()
+main = Souffle.runSouffle Path $ \\maybeProgram -> do
+  case maybeProgram of
+    Nothing -> liftIO $ putStrLn "Failed to load program."
+    Just prog -> do
+      Souffle.addFact prog $ Edge "d" "i"
+      Souffle.addFacts prog [ Edge "e" "f"
+                            , Edge "f" "g"
+                            , Edge "f" "j"
+                            , Edge "f" "h"
+                            , Edge "g" "i"
+                            ]
+
+      Souffle.run prog
+
+      results :: Vector Reachable <- Souffle.getFacts prog
+      maybeFact <- Souffle.findFact prog $ Reachable "a" "c"
+
+      liftIO $ traverse_ print results
+      liftIO $ print maybeFact
+----
+1 > This is not a boring Haskell talk 😉
+5 > souffle-haskell is meant to be imported qualified
+6 > souffle-haskell makes heavy use of GHC.Generics
+12 > A data type for representing our datalog program
+14:18 > Datalog facts are represented as simple product / record types
+20:30 > Datalog program info is represented at the type level
+32:33 > souffle-haskell can automatically derive (un-)marshalling code between Haskell and Datalog
+36:40 > Initializing the Soufflé code
+41:47 > Adding facts
+49 > Compute derived facts
+51:55 > Retrieving facts
+```
+
+```notes
+Facts are represented in Haskell as simple product types,
+Numbers map to Int32, unsigned to Word32, floats to Float,
+symbols to Strings / Text.
+
+You can change type parameter to fetch different relations
+Here it requires an annotation since we directly print it
+to stdout, but if passed to another function, it can infer
+the correct type automatically.
+```
+
+---
+
+## Features
+
+---
+
+### Small core API
+
+- 6 functions + 3 typeclasses
+- Very little boilerplate thanks to `GHC.Generics`
+
+```notes
+The 6 functions are:
+1. runSouffle
+2. addFact
+3. addFacts
+4. run
+5. getFacts
+6. findFact
+
+(And are all used in previous code snippet.)
+
+The 3 typeclasses are:
+1. Program
+2. Fact
+3. Marshal
+```
+
+---
+
+### 2 modes of operation
+
+<Dot contents={require("./schematics/modes_of_operation.dot")}
+     width="35vw"/>
+
+- Identical API (only change 1 import!)
+- Quick development + good performance
+
+```notes
+Interpreted mode is when you use the souffle interpreter from Haskell.
+Communication then is via CSV files.
+Compiled mode is when you use souffle to compile a datalog program to C++.
+The resulting C++ is then embedded in the Haskell executable and communication
+happens via the Souffle C++ API.
+```
+
+---
+
+### Compile time checks
+
+- Based on type level information (`Program` + `Fact` + `Generics`)
+- Custom type errors for better dev experience
+
+---
+
+### Compile time checks
+
+```bash
+tests/Test/Language/Souffle/CompiledSpec.hs:100:9: error:
+    • You tried to use an output fact of type Reachable as an input.
+      Possible solution: change the FactDirection of Reachable to
+      either 'Input' or 'InputOutput'.
+    • In the expression: Souffle.addFact prog
+      In a stmt of a 'do' block: Souffle.addFact prog $ Reachable "e" "f"
+      In the expression:
+        do let prog = fromJust handle
+           Souffle.run prog
+           es1 <- Souffle.getFacts prog
+           Souffle.addFact prog $ Edge "e" "f"
+           ....
+    |
+100 |         Souffle.addFact prog $ Reachable "e" "f"
+    |         ^^^^^^^^^^^^^^^^^^^^
+```
+
+---
+
+### Compile time checks
+
+```haskell
+data Edge = Edge String String | Vertex String
+  deriving (Generic)
+instance Marshal Edge
+```
+
+```bash
+tests/Test/Language/Souffle/MarshalSpec.hs:69:10: error:
+    • Error while deriving marshalling code for type Edge:
+      Cannot derive sum type, only product types are supported.
+    • In the expression: Language.Souffle.Marshal.$dmpush @(Edge)
+      In an equation for ‘push’:
+          push = Language.Souffle.Marshal.$dmpush @(Edge)
+      In the instance declaration for ‘Marshal Edge’
+   |
+69 | instance Marshal Edge
+   |          ^^^^^^^^^^^^
+```
+
+---
+
+## Self contained
+
+<Dot contents={require("./schematics/self_contained.dot")}
+     width="35vw"/>
+
+- No dependency on souffle for transitive dependencies *
+
+<FootNotes>
+  <FootNote>* Only for compiled mode</FootNote>
+</FootNotes>
+
+---
+
+# Soufflé DSL
+
+<Image src={require("./images/we_need_to_go_deeper.jpg")} width="70%"/>
+
+```notes
+Haskell has some features which are really nice for embedded DSLs:
+
+1. Typechecker to prevent certain kinds of mistakes
+2. Overloaded literals (integers + strings)
+3. Custom operators
+```
+
+---
+
+## Thought experiment
+
+- Can we rewrite the following Datalog in Haskell?
+
+```prolog
+.decl edge(n: symbol, m: symbol)
+.decl reachable(n: symbol, m: symbol)
+.input edge
+.output reachable
+
+reachable(x, y) :- edge(x, y).
+reachable(x, z) :-
+  edge(x, y),
+  reachable(y, z).
+```
+
+---
+
+## Thought experiment
+
+- Type info &#x2192; extract from Haskell types
+
+
+```prolog
+.decl edge(n: symbol, m: symbol)
+.decl reachable(n: symbol, m: symbol)
+.input edge
+.output reachable
+```
+
+---
+
+```haskell Thought experiment
+data Edge = Edge String String
+  deriving (Generic, Marshal, FactMetadata)
+data Reachable = Reachable String String
+  deriving (Generic, Marshal, FactMetadata)
+
+instance Fact Edge where
+  type FactDirection Edge = 'Input
+  factName = const "edge"
+instance Fact Reachable where
+  type FactDirection Reachable = 'Output
+  factName = const "reachable"
+
+example = do
+  Predicate edge <- predicateFor @Edge
+  Predicate reachable <- predicateFor @Reachable
+  -- ...
+----
+1:4 > Define Haskell data types
+6:11 > Fact info declared up front using typeclass
+13:16 > Generate predicate based on type
+```
+
+
+```notes
+- Slightly more verbose, but most of it is already written for normal bindings
+- "predicateFor" automatically generates the code, and gives us a handle for writing the logic (see next slide)
+```
+
+---
+
+## Thought experiment
+
+- Logic &#x2192; literals + functions + combinators
+
+```prolog
+reachable(x, y) :- edge(x, y).
+reachable(x, z) :-
+  edge(x, y),
+  reachable(y, z).
+```
+
+---
+
+```haskell Thought experiment
+example = do
+  Predicate edge <- predicateFor @Edge
+  Predicate reachable <- predicateFor @Reachable
+
+  x <- var "x"
+  y <- var "y"
+  z <- var "z"
+
+  reachable(x, y) |-  -- |- is a synonym for :-
+    edge(x, y)
+  reachable(x, z) |- do
+    edge(x, y)
+    reachable(y, z)
+----
+1:3 > Continuation of previous snippet
+5:7 > Manually introduce variables
+9:13 > Use predicates to form logical relations
+```
+
+```notes
+Differences:
+- Need to manually introduce variables
+- Do syntax for conjunction
+
+NOTE: reachable(x, y) works because reachable is a function that takes a 2-element tuple.
+```
+
+---
+
+## Metaprogramming Datalog (1)
+
+- DSL: some repetition in logic statements so far
+- Can we write this only once (polymorphically?)
+
+---
+
+```haskell Metaprogramming Datalog (1)
+-- Note: Type signature not required
+transitiveVia :: forall prog p1 p2 t. Structure p1 ~ Structure p2
+              => Structure p1 ~ '[t, t]
+              => Predicate p1 -> Predicate p2 -> DSL prog 'Definition ()
+transitiveVia (Predicate p1) (Predicate p2) = do
+  a <- var "a"
+  b <- var "b"
+  c <- var "c"
+
+  p1(a, b) |- p2(a, b)
+  p1(a, b) |- do
+    p2(a, c)
+    p1(c, b)
+
+example :: DSL ExampleProgram 'Definition ()
+example = do
+  edge <- predicateFor @Edge
+  reachable <- predicateFor @Reachable
+  reachable `transitiveVia` edge
+----
+1:4 > Optional type signature
+5:13 > Reusable logic as a helper function
+15:19 > Using the helper function
+```
+
+```notes
+Haskell's typesystem automatically gives us "generic" properties for free thanks to typesystem.
+In Soufflé, this required a completely new concept "components" (a.k.a. generics).
+
+Type signature is optional, but helps with type errors. Explicit equality constraints are needed
+to make type checker happy.
+
+Should functions like this be added as reusable functions? Separate library?
+```
+
+---
+
+## Metaprogramming Datalog (2)
+
+<InlineSVG contents={require("./images/sudoku.svg")} width="20%"/>
+
+- Problem: no builtin function for distinct variables in Soufflé
+- Error-prone and tedious to write manually
+- Can we piggyback on Haskell?
+
+```notes
+I found about this when experimenting with a graph that contained cycles
+in which I had to find the most efficient path. Because of the cycles,
+I either had to keep track of all visited nodes, or list out all constraints explicitly.
+
+Amount of constraints necessary to mark all vars as distinct / unique: N * (N - 1) / 2
+```
+
+---
+
+```haskell Metaprogramming Datalog (2)
+import Data.List (tails)
+import Data.Foldable (traverse_)
+
+pairs :: [a] -> [(a, a)]
+pairs xs = [(x, y) | (x:ys) <- tails xs, y <- ys]
+-- pairs [1,2,3] => [(1,2), (1,3), (2,3)]
+
+distinctVars :: [Term ctx ty] -> Body ctx ()
+distinctVars vars =
+  let varPairs = pairs vars
+   in traverse_ (uncurry (.!=)) varPairs
+  -- OR: traverse_ (\\(v1, v2) -> v1 .!= v2) varPairs
+----
+1:2 > Some imports
+4:6 > Helper function for computing all pairs
+8:12 > Using Haskell for metaprogramming
+```
+
+```notes
+This works since a Datalog program is represented by a plain Haskell value.
+Metaprogramming becomes simply applying functions to these values to transform entire programs.
+```
+
+---
+
+## Benefits
+
+- FP + logic part both in Haskell
+- DL program is a Haskell value, can be transformed via functions
+- Implement concepts via code generation (distinctVars example)
+- Code reuse
+
+---
+
+## Limitations
+
+- Only (large) subset of Soufflé supported
+- Not all errors captured in typesystem
+- Added complexity
+
+```notes
+DSL covers most usecases, but feature missing? Use approach with external .dl file!
+More errors could be captured via extra semantic analysis pass, or via different design of DSL.
+```
+
+---
+
+# Projects using souffle-haskell
+
+---
+
+## 1. souffle-haskell
+
+- [Script](https://github.com/luc-tielen/souffle-haskell/blob/master/scripts/import_souffle_headers.hs#L26-L86) for computing minimal C++ includes
+
+<Image src={require("./images/dogfood.jpeg")}/>
+
+```notes
+- C++ includes are needed for stand-alone package (users of souffle powered algorithm do not need to install headers separately)
+- Source code: https://github.com/luc-tielen/souffle-haskell/blob/master/scripts/import_souffle_headers.hs#L66-L86
+```
+
+---
+
+## 2. GRIN
+
+- = experimental FP compiler backend ([Github](https://github.com/grin-compiler/grin))
+- souffle-haskell used in unmerged [PR](https://github.com/grin-compiler/grin/pull/108)
+- Early results: 40x speedup of HPT algorithm
+
+```notes
+- GRIN uses Souffle for complex program analysis
+- 40x speedup is in interpreted mode (!)
+```
+
+---
+
+## 3. GHC-WPC
+
+- = Experimental Whole Program Compiler for Haskell ([Github](https://github.com/grin-compiler/ghc-whole-program-compiler-project))
+
+```notes
+GHC-WPC uses Souffle for complex program analysis
+
+Source code:
+- https://github.com/grin-compiler/ghc-whole-program-compiler-project/blob/da6064419ea45e9c2525c2115511cdae2884445d/external-stg-compiler/lib/Stg/DeadFunctionElimination/Analysis.hs
+- https://github.com/grin-compiler/ghc-whole-program-compiler-project/blob/master/external-stg-compiler/datalog/ext-stg-liveness.dl
+```
+
+---
+
+## 4. Your future project?
+
+```notes
+- Somebody is trying to use it in test framework to map failing test back to description
+- Still many undiscovered opportunities!
+```
+
+---
+
+# Conclusion
+
+- Powerful synergy of FP + LP
+- Still many undiscovered opportunities
+- Haskell's type system is amazing!
+- Cabal + Haskell + C++ = tricky
+
+```notes
+I hope this talk convinced you of the power of combining FP & LP.
+On the one hand, FP is all about data, and functions transforming that data.
+On the other hand, Datalog takes some input facts (data) and derives additional facts.
+In a way, Datalog is like "fuel" for a FP language.
+
+There are still many opportunities that can be explored.
+Having the typesystem of Haskell made it really easy to enforce certain invariants,
+carry around proofs on type level (and still have nice error messages!).
+Mixing Haskell with C++ can be quite tricky because of cabal and all the specific compiler flags.
+On top of that, there is a lot of OS-specific stuff you need to take into account for C++.
+```
+
+---
+
+# Questions?
+
+<TwitterInfo/>
+<GithubInfo repo="luc-tielen/souffle-haskell"/>
+
+---
+
+# Links
+
+- [https://luc-tielen.github.io/talks/souffle-haskell](https://luc-tielen.github.io/talks/haskell/souffle-haskell)
+- [https://souffle-lang.github.io/](https://souffle-lang.github.io/)
+- [Souffle PLDI tutorial](https://souffle-lang.github.io/pdf/SoufflePLDITutorial.pdf)
+
