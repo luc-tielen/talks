@@ -14,7 +14,7 @@ export const theme = withCodeSurfer(CodeSurfer)
 <Title contents="Leverage the power of logic programming with souffle-haskell"/>
 <div>
   <Image src={require("./images/souffle_wide_logo.png")}/>
-  <InlineSVG contents="./images/haskell_logo.svg" width="10%"/>
+  <InlineSVG contents={require("./images/haskell_logo.svg")} width="10%"/>
 </div>
 
 ---
@@ -51,7 +51,7 @@ A new library was born. :)
 
 ---
 
-![Souffle logo](./images/souffle_wide_logo.png)
+<Image src={require("./images/souffle_wide_logo.png")}/>
 
 - Datalog variant
 - Static analysis, security checks, graph algorithms, ...
@@ -476,7 +476,7 @@ Should functions like this be added as reusable functions? Separate library?
 
 ## Metaprogramming Datalog (2)
 
-<InlineSVG contents="./images/sudoku.svg" width="20%"/>
+<InlineSVG contents={require("./images/sudoku.svg")} width="20%"/>
 
 - Problem: no builtin function for distinct variables in Soufflé
 - Error-prone and tedious to write manually
@@ -548,7 +548,7 @@ More errors could be captured via extra semantic analysis pass, or via different
 
 - [Script](https://github.com/luc-tielen/souffle-haskell/blob/master/scripts/import_souffle_headers.hs#L26-L86) for computing minimal C++ includes
 
-![Dogfooding](./images/dogfood.jpeg)
+<Image src={require("./images/dogfood.jpeg")}/>
 
 ```notes
 - C++ includes are needed for stand-alone package (users of souffle powered algorithm do not need to install headers separately)
