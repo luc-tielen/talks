@@ -183,10 +183,10 @@ eval :: Expr -> Either Int Bool
 eval (Number n) = Left n
 eval (Boolean b) = Right b
 eval (Sum e1 e2) = case (eval e1, eval e2) of
-  (Left n1, Left n2) -> n1 + n2
+  (Left n1, Left n2) -> Left $ n1 + n2
   _ -> _  -- ???
 eval (And e1 e2) = case (eval e1, eval e2) of
-  (Right b1, Right b2) -> b1 && b2
+  (Right b1, Right b2) -> Right $ b1 && b2
   _ -> _  -- ???
 
 
@@ -200,8 +200,8 @@ data Expr a where
 eval :: Expr a -> a
 eval (Number n) = n
 eval (Boolean b) = b
-eval (Sum e1 e2) = eval n1 + eval n2
-eval (And e1 e2) = eval n1 && eval n2
+eval (Sum e1 e2) = eval e1 + eval e2
+eval (And e1 e2) = eval e1 && eval e2
 ----
 1:2 > A data type for expressions (with integers)
 1:4 > Adding Bools: allows invalid Exprs to be created
